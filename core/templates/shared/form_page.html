@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} | TeleHealth RHU{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="module-tag">{{ module }}</span><h1>{{ title }}</h1><p>Fields marked with an asterisk are required.</p></div></div>
+<section class="card form-card"><form method="post">{% csrf_token %}{% include "includes/form_errors.html" %}<div class="form-grid">{% for field in form %}{% include "includes/field.html" %}{% endfor %}</div><div class="form-actions"><button class="button button-primary" type="submit" data-submit-label="Saving...">Save changes</button><a class="button button-secondary" href="{% url cancel_url %}">Cancel</a></div></form></section>
+{% endblock %}

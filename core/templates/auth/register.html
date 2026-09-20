@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Patient Registration | TeleHealth RHU{% endblock %}
+{% block public_content %}
+<div class="auth-layout auth-layout-register">
+  <section class="auth-intro">
+    <span class="eyebrow">PATIENT REGISTRATION</span>
+    <h1>Your care journey starts here.</h1>
+    <p>Create one secure account to request appointments, receive specialist confirmations, and review your care history.</p>
+    <div class="registration-note"><b>Already registered at the health center?</b><p>Ask RHU staff to link your existing clinical record before creating another account.</p></div>
+  </section>
+  <section class="auth-card auth-card-wide">
+    <span class="module-tag">CREATE ACCOUNT</span>
+    <h2>Patient information</h2>
+    <p>Fields marked with an asterisk are required.</p>
+    <form method="post">{% csrf_token %}{% include "includes/form_errors.html" %}<div class="form-grid">{% for field in form %}{% include "includes/field.html" %}{% endfor %}</div>
+      <div class="form-actions"><button class="button button-primary" type="submit" data-submit-label="Creating account...">Create patient account</button><a class="button button-secondary" href="{% url 'login' %}">Back to sign in</a></div>
+    </form>
+  </section>
+</div>
+{% endblock %}

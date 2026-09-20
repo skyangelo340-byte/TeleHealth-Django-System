@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Communications | TeleHealth RHU{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="module-tag">PATIENT OUTREACH</span><h1>Communication Planning</h1><p>Prepare and schedule SMS campaign plans. Delivery status is updated only by the notification workflow.</p></div>{% if request.user.is_superuser or request.user.staff_profile.role == 'Admin' %}<a class="button button-primary" href="{% url 'campaign_create' %}">New campaign plan</a>{% endif %}</div>
+<form class="filter-bar" method="get"><input class="form-control" name="q" value="{{ q }}" placeholder="Search campaign, message, or target group"><button class="button button-secondary">Search</button></form>
+<section class="card table-card"><table><thead><tr><th>Campaign</th><th>Target</th><th>Recipients</th><th>Sent</th><th>Schedule</th><th>Status</th><th></th></tr></thead><tbody>{% for item in campaigns %}<tr><td><b>{{ item.title }}</b><small>{{ item.message|truncatechars:80 }}</small></td><td>{{ item.target_group }}</td><td>{{ item.recipient_count }}</td><td>{{ item.sent_count }}</td><td>{{ item.scheduled_date|date:'M j, Y H:i'|default:'Not scheduled' }}</td><td><span class="badge">{{ item.status }}</span></td><td>{% if request.user.is_superuser or request.user.staff_profile.role == 'Admin' %}<a class="button button-small" href="{% url 'campaign_edit' item.pk %}">Edit</a>{% endif %}</td></tr>{% empty %}<tr><td colspan="7" class="empty">No campaigns found.</td></tr>{% endfor %}</tbody></table></section>
+{% endblock %}

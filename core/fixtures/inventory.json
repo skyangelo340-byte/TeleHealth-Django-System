@@ -1,0 +1,146 @@
+[
+  {
+    "model": "core.inventoryitem",
+    "pk": 1,
+    "fields": {
+      "name": "Paracetamol 500mg",
+      "category": "Medicine",
+      "unit": "boxes",
+      "quantity_on_hand": 51,
+      "reorder_level": 13,
+      "last_restocked": "2026-06-16"
+    }
+  },
+  {
+    "model": "core.inventoryitem",
+    "pk": 2,
+    "fields": {
+      "name": "Amoxicillin 500mg",
+      "category": "Medicine",
+      "unit": "boxes",
+      "quantity_on_hand": 38,
+      "reorder_level": 8,
+      "last_restocked": "2026-07-05"
+    }
+  },
+  {
+    "model": "core.inventoryitem",
+    "pk": 3,
+    "fields": {
+      "name": "Oral Rehydration Salts",
+      "category": "Medicine",
+      "unit": "packs",
+      "quantity_on_hand": 74,
+      "reorder_level": 20,
+      "last_restocked": "2026-06-08"
+    }
+  },
+  {
+    "model": "core.inventoryitem",
+    "pk": 4,
+    "fields": {
+      "name": "Cetirizine 10mg",
+      "category": "Medicine",
+      "unit": "boxes",
+      "quantity_on_hand": 29,
+      "reorder_level": 5,
+      "last_restocked": "2026-06-19"
+    }
+  },
+  {
+    "model": "core.inventoryitem",
+    "pk": 5,
+    "fields": {
+      "name": "Mefenamic Acid 500mg",
+      "category": "Medicine",
+      "unit": "boxes",
+      "quantity_on_hand": 19,
+      "reorder_level": 6,
+      "last_restocked": "2026-06-18"
+    }
+  },
+  {
+    "model": "core.inventoryitem",
+    "pk": 6,
+    "fields": {
+      "name": "Disposable Syringes 3ml",
+      "category": "Supplies",
+      "unit": "boxes",
+      "quantity_on_hand": 38,
+      "reorder_level": 10,
+      "last_restocked": "2026-06-18"
+    }
+  },
+  {
+    "model": "core.inventoryitem",
+    "pk": 7,
+    "fields": {
+      "name": "Surgical Gloves (M)",
+      "category": "Supplies",
+      "unit": "boxes",
+      "quantity_on_hand": 46,
+      "reorder_level": 15,
+      "last_restocked": "2026-06-17"
+    }
+  },
+  {
+    "model": "core.inventoryitem",
+    "pk": 8,
+    "fields": {
+      "name": "Face Masks",
+      "category": "Supplies",
+      "unit": "boxes",
+      "quantity_on_hand": 93,
+      "reorder_level": 26,
+      "last_restocked": "2026-06-17"
+    }
+  },
+  {
+    "model": "core.inventoryitem",
+    "pk": 9,
+    "fields": {
+      "name": "Alcohol 70% 500ml",
+      "category": "Supplies",
+      "unit": "bottles",
+      "quantity_on_hand": 31,
+      "reorder_level": 11,
+      "last_restocked": "2026-06-29"
+    }
+  },
+  {
+    "model": "core.inventoryitem",
+    "pk": 10,
+    "fields": {
+      "name": "Digital Thermometer",
+      "category": "Equipment",
+      "unit": "pcs",
+      "quantity_on_hand": 9,
+      "reorder_level": 5,
+      "last_restocked": "2026-06-12"
+    }
+  },
+  {
+    "model": "core.inventoryitem",
+    "pk": 11,
+    "fields": {
+      "name": "Blood Pressure Monitor",
+      "category": "Equipment",
+      "unit": "pcs",
+      "quantity_on_hand": 3,
+      "reorder_level": 5,
+      "last_restocked": "2026-06-16"
+    }
+  },
+  {
+    "model": "core.inventoryitem",
+    "pk": 12,
+    "fields": {
+      "name": "Pulse Oximeter",
+      "category": "Equipment",
+      "unit": "pcs",
+      "quantity_on_hand": 2,
+      "reorder_level": 5,
+      "last_restocked": "2026-06-19"
+    }
+  }
+]

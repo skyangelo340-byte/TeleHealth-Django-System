@@ -1,0 +1,391 @@
+[
+  {
+    "model": "core.triagecase",
+    "pk": 1,
+    "fields": {
+      "patient": 17,
+      "symptoms": [
+        "Fever",
+        "Diarrhea",
+        "Fatigue"
+      ],
+      "predicted_specialty": "Pediatrics",
+      "confidence": 72.69,
+      "priority": "Low",
+      "created_at": "2026-07-02T11:52:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 2,
+    "fields": {
+      "patient": 3,
+      "symptoms": [
+        "Fever",
+        "Cough",
+        "Fatigue"
+      ],
+      "predicted_specialty": "General Medicine",
+      "confidence": 77.38,
+      "priority": "Low",
+      "created_at": "2026-07-07T07:19:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 3,
+    "fields": {
+      "patient": 10,
+      "symptoms": [
+        "Fever",
+        "Diarrhea",
+        "Fatigue"
+      ],
+      "predicted_specialty": "Pediatrics",
+      "confidence": 67.62,
+      "priority": "Low",
+      "created_at": "2026-07-07T12:46:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 4,
+    "fields": {
+      "patient": 16,
+      "symptoms": [
+        "Fever",
+        "Cough",
+        "Fatigue"
+      ],
+      "predicted_specialty": "General Medicine",
+      "confidence": 73.81,
+      "priority": "Low",
+      "created_at": "2026-07-01T15:40:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 5,
+    "fields": {
+      "patient": 14,
+      "symptoms": [
+        "Joint Pain",
+        "Body Pain"
+      ],
+      "predicted_specialty": "Orthopedics",
+      "confidence": 69.32,
+      "priority": "Low",
+      "created_at": "2026-07-04T08:01:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 6,
+    "fields": {
+      "patient": 2,
+      "symptoms": [
+        "Fever",
+        "Cough",
+        "Fatigue"
+      ],
+      "predicted_specialty": "General Medicine",
+      "confidence": 84.75,
+      "priority": "Low",
+      "created_at": "2026-07-07T14:35:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 7,
+    "fields": {
+      "patient": 2,
+      "symptoms": [
+        "Chest Pain",
+        "Shortness of Breath"
+      ],
+      "predicted_specialty": "Emergency",
+      "confidence": 84.41,
+      "priority": "High",
+      "created_at": "2026-07-04T14:16:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 8,
+    "fields": {
+      "patient": 1,
+      "symptoms": [
+        "Headache",
+        "Dizziness"
+      ],
+      "predicted_specialty": "Neurology",
+      "confidence": 89.73,
+      "priority": "Low",
+      "created_at": "2026-07-09T08:47:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 9,
+    "fields": {
+      "patient": 24,
+      "symptoms": [
+        "Headache",
+        "Dizziness"
+      ],
+      "predicted_specialty": "Neurology",
+      "confidence": 72.82,
+      "priority": "Low",
+      "created_at": "2026-07-05T10:46:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 10,
+    "fields": {
+      "patient": 25,
+      "symptoms": [
+        "Fever",
+        "Diarrhea",
+        "Fatigue"
+      ],
+      "predicted_specialty": "Pediatrics",
+      "confidence": 72.15,
+      "priority": "Medium",
+      "created_at": "2026-07-08T13:04:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 11,
+    "fields": {
+      "patient": 16,
+      "symptoms": [
+        "Fatigue",
+        "Body Pain",
+        "Dizziness"
+      ],
+      "predicted_specialty": "Internal Medicine",
+      "confidence": 88.78,
+      "priority": "Low",
+      "created_at": "2026-07-02T16:09:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 12,
+    "fields": {
+      "patient": 11,
+      "symptoms": [
+        "Fatigue",
+        "Body Pain",
+        "Dizziness"
+      ],
+      "predicted_specialty": "Internal Medicine",
+      "confidence": 85.2,
+      "priority": "Medium",
+      "created_at": "2026-07-03T07:30:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 13,
+    "fields": {
+      "patient": 2,
+      "symptoms": [
+        "Headache",
+        "Dizziness"
+      ],
+      "predicted_specialty": "Neurology",
+      "confidence": 73.33,
+      "priority": "Low",
+      "created_at": "2026-07-04T17:31:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 14,
+    "fields": {
+      "patient": 10,
+      "symptoms": [
+        "Joint Pain",
+        "Body Pain"
+      ],
+      "predicted_specialty": "Orthopedics",
+      "confidence": 73.85,
+      "priority": "Medium",
+      "created_at": "2026-07-08T08:57:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 15,
+    "fields": {
+      "patient": 18,
+      "symptoms": [
+        "Fever",
+        "Diarrhea",
+        "Fatigue"
+      ],
+      "predicted_specialty": "Pediatrics",
+      "confidence": 74.66,
+      "priority": "Low",
+      "created_at": "2026-07-08T07:18:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 16,
+    "fields": {
+      "patient": 15,
+      "symptoms": [
+        "Rash",
+        "Itching"
+      ],
+      "predicted_specialty": "Dermatology",
+      "confidence": 90.42,
+      "priority": "Medium",
+      "created_at": "2026-07-05T13:13:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 17,
+    "fields": {
+      "patient": 7,
+      "symptoms": [
+        "Rash",
+        "Itching"
+      ],
+      "predicted_specialty": "Dermatology",
+      "confidence": 83.03,
+      "priority": "Low",
+      "created_at": "2026-07-09T11:23:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 18,
+    "fields": {
+      "patient": 5,
+      "symptoms": [
+        "Joint Pain",
+        "Body Pain"
+      ],
+      "predicted_specialty": "Orthopedics",
+      "confidence": 73.67,
+      "priority": "Low",
+      "created_at": "2026-07-06T10:31:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 19,
+    "fields": {
+      "patient": 16,
+      "symptoms": [
+        "Abdominal Pain",
+        "Nausea",
+        "Vomiting"
+      ],
+      "predicted_specialty": "Gastroenterology",
+      "confidence": 65.77,
+      "priority": "Low",
+      "created_at": "2026-07-08T17:28:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 20,
+    "fields": {
+      "patient": 13,
+      "symptoms": [
+        "Fatigue",
+        "Body Pain",
+        "Dizziness"
+      ],
+      "predicted_specialty": "Internal Medicine",
+      "confidence": 87.54,
+      "priority": "Medium",
+      "created_at": "2026-07-06T13:20:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 21,
+    "fields": {
+      "patient": 4,
+      "symptoms": [
+        "Cough",
+        "Sore Throat",
+        "Shortness of Breath"
+      ],
+      "predicted_specialty": "Respiratory Medicine",
+      "confidence": 65.05,
+      "priority": "Medium",
+      "created_at": "2026-07-07T08:59:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 22,
+    "fields": {
+      "patient": 7,
+      "symptoms": [
+        "Chest Pain",
+        "Shortness of Breath"
+      ],
+      "predicted_specialty": "Emergency",
+      "confidence": 92.95,
+      "priority": "High",
+      "created_at": "2026-07-05T11:23:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 23,
+    "fields": {
+      "patient": 3,
+      "symptoms": [
+        "Abdominal Pain",
+        "Nausea",
+        "Vomiting"
+      ],
+      "predicted_specialty": "Gastroenterology",
+      "confidence": 77.09,
+      "priority": "Low",
+      "created_at": "2026-07-06T13:48:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 24,
+    "fields": {
+      "patient": 9,
+      "symptoms": [
+        "Chest Pain",
+        "Shortness of Breath"
+      ],
+      "predicted_specialty": "Emergency",
+      "confidence": 73.7,
+      "priority": "High",
+      "created_at": "2026-07-01T17:18:00"
+    }
+  },
+  {
+    "model": "core.triagecase",
+    "pk": 25,
+    "fields": {
+      "patient": 21,
+      "symptoms": [
+        "Fever",
+        "Cough",
+        "Fatigue"
+      ],
+      "predicted_specialty": "General Medicine",
+      "confidence": 72.73,
+      "priority": "Medium",
+      "created_at": "2026-07-07T15:20:00"
+    }
+  }
+]

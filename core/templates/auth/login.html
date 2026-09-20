@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Sign In | TeleHealth RHU{% endblock %}
+{% block public_content %}
+<div class="auth-layout">
+  <section class="auth-intro">
+    <span class="eyebrow">CONNECTED COMMUNITY CARE</span>
+    <h1>Healthcare support, wherever you are.</h1>
+    <p>Request care, coordinate specialist schedules, and follow each consultation through one secure RHU service.</p>
+  </section>
+  <section class="auth-card">
+    <span class="module-tag">SECURE ACCESS</span>
+    <h2>Welcome back</h2>
+    <p>Sign in with your registered email to continue.</p>
+    <form method="post" class="form-stack">{% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.GET.next }}">
+      <div class="field"><label for="email">Email address</label><input class="form-control" id="email" type="email" name="email" value="{{ identifier }}" autocomplete="username" placeholder="you@example.com" required autofocus></div>
+      <div class="field"><label for="password">Password</label><input class="form-control" id="password" type="password" name="password" autocomplete="current-password" placeholder="Enter your password" required></div>
+      <button class="button button-primary button-wide" type="submit" data-submit-label="Signing in...">Sign in securely</button>
+    </form>
+    <div class="auth-divider"><span>New to TeleHealth RHU?</span></div>
+    <a class="button button-secondary button-wide" href="{% url 'register' %}">Create a patient account</a>
+    <p class="auth-support">RHU Lumang Bayan, Plaridel, Bulacan</p>
+  </section>
+</div>
+{% endblock %}

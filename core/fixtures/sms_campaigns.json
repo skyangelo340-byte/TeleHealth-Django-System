@@ -1,0 +1,158 @@
+[
+  {
+    "model": "core.smscampaign",
+    "pk": 1,
+    "fields": {
+      "title": "Flu Vaccination Schedule #1",
+      "message": "Free flu vaccination available this week at Brgy. Lumang Bayan RHU.",
+      "target_group": "Senior citizens",
+      "recipient_count": 241,
+      "sent_count": 241,
+      "status": "Sent",
+      "scheduled_date": "2026-06-14T08:00:00"
+    }
+  },
+  {
+    "model": "core.smscampaign",
+    "pk": 2,
+    "fields": {
+      "title": "Nutrition Month Advisory #2",
+      "message": "Join our free nutrition counseling this week at the RHU.",
+      "target_group": "All patients",
+      "recipient_count": 254,
+      "sent_count": 240,
+      "status": "Failed",
+      "scheduled_date": "2026-06-18T16:00:00"
+    }
+  },
+  {
+    "model": "core.smscampaign",
+    "pk": 3,
+    "fields": {
+      "title": "Flu Vaccination Schedule #3",
+      "message": "Free flu vaccination available this week at Brgy. Lumang Bayan RHU.",
+      "target_group": "Senior citizens",
+      "recipient_count": 91,
+      "sent_count": 52,
+      "status": "Draft",
+      "scheduled_date": "2026-06-15T17:00:00"
+    }
+  },
+  {
+    "model": "core.smscampaign",
+    "pk": 4,
+    "fields": {
+      "title": "Flu Vaccination Schedule #4",
+      "message": "Free flu vaccination available this week at Brgy. Lumang Bayan RHU.",
+      "target_group": "Senior citizens",
+      "recipient_count": 379,
+      "sent_count": 379,
+      "status": "Sent",
+      "scheduled_date": "2026-06-16T08:00:00"
+    }
+  },
+  {
+    "model": "core.smscampaign",
+    "pk": 5,
+    "fields": {
+      "title": "Appointment Reminder #5",
+      "message": "You have an upcoming appointment. Please arrive 15 minutes early.",
+      "target_group": "Scheduled patients",
+      "recipient_count": 115,
+      "sent_count": 53,
+      "status": "Scheduled",
+      "scheduled_date": "2026-06-11T12:00:00"
+    }
+  },
+  {
+    "model": "core.smscampaign",
+    "pk": 6,
+    "fields": {
+      "title": "Prenatal Checkup Reminder #6",
+      "message": "Your prenatal checkup is due. Please visit the RHU this week.",
+      "target_group": "Pregnant patients",
+      "recipient_count": 180,
+      "sent_count": 180,
+      "status": "Sent",
+      "scheduled_date": "2026-06-21T12:00:00"
+    }
+  },
+  {
+    "model": "core.smscampaign",
+    "pk": 7,
+    "fields": {
+      "title": "Medicine Restock Notice #7",
+      "message": "Maintenance medicines for hypertension are now available at the RHU.",
+      "target_group": "Hypertensive patients",
+      "recipient_count": 385,
+      "sent_count": 247,
+      "status": "Scheduled",
+      "scheduled_date": "2026-06-18T14:00:00"
+    }
+  },
+  {
+    "model": "core.smscampaign",
+    "pk": 8,
+    "fields": {
+      "title": "Dengue Prevention Drive #8",
+      "message": "Reminder: Clean surroundings weekly to prevent dengue. Visit RHU for free check-ups.",
+      "target_group": "All patients",
+      "recipient_count": 135,
+      "sent_count": 135,
+      "status": "Sent",
+      "scheduled_date": "2026-06-03T11:00:00"
+    }
+  },
+  {
+    "model": "core.smscampaign",
+    "pk": 9,
+    "fields": {
+      "title": "Appointment Reminder #9",
+      "message": "You have an upcoming appointment. Please arrive 15 minutes early.",
+      "target_group": "Scheduled patients",
+      "recipient_count": 304,
+      "sent_count": 304,
+      "status": "Sent",
+      "scheduled_date": "2026-06-15T13:00:00"
+    }
+  },
+  {
+    "model": "core.smscampaign",
+    "pk": 10,
+    "fields": {
+      "title": "Medicine Restock Notice #10",
+      "message": "Maintenance medicines for hypertension are now available at the RHU.",
+      "target_group": "Hypertensive patients",
+      "recipient_count": 268,
+      "sent_count": 98,
+      "status": "Draft",
+      "scheduled_date": "2026-06-08T09:00:00"
+    }
+  },
+  {
+    "model": "core.smscampaign",
+    "pk": 11,
+    "fields": {
+      "title": "Flu Vaccination Schedule #11",
+      "message": "Free flu vaccination available this week at Brgy. Lumang Bayan RHU.",
+      "target_group": "Senior citizens",
+      "recipient_count": 225,
+      "sent_count": 225,
+      "status": "Sent",
+      "scheduled_date": "2026-06-11T11:00:00"
+    }
+  },
+  {
+    "model": "core.smscampaign",
+    "pk": 12,
+    "fields": {
+      "title": "Prenatal Checkup Reminder #12",
+      "message": "Your prenatal checkup is due. Please visit the RHU this week.",
+      "target_group": "Pregnant patients",
+      "recipient_count": 182,
+      "sent_count": 182,
+      "status": "Sent",
+      "scheduled_date": "2026-06-07T08:00:00"
+    }
+  }
+]

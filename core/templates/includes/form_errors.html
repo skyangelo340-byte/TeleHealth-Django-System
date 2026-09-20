@@ -1,0 +1,6 @@
+{% if form.errors %}
+<div class="form-error-summary" role="alert" tabindex="-1" data-error-summary>
+  <b>Please review the highlighted information.</b>
+  {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+</div>
+{% endif %}

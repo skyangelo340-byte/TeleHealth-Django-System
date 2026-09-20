@@ -1,0 +1,452 @@
+[
+  {
+    "model": "core.appointment",
+    "pk": 1,
+    "fields": {
+      "patient": 19,
+      "department": "Gastroenterology",
+      "provider_name": "Dr. Michael Tan",
+      "appointment_date": "2026-07-15",
+      "appointment_time": "10:45:00",
+      "queue_number": 1,
+      "status": "Completed",
+      "priority": "Low",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 2,
+    "fields": {
+      "patient": 1,
+      "department": "Dermatology",
+      "provider_name": "Dr. Michael Tan",
+      "appointment_date": "2026-07-04",
+      "appointment_time": "10:45:00",
+      "queue_number": 2,
+      "status": "Scheduled",
+      "priority": "Low",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 3,
+    "fields": {
+      "patient": 17,
+      "department": "Emergency",
+      "provider_name": "Nurse Aurora Santos",
+      "appointment_date": "2026-07-08",
+      "appointment_time": "14:30:00",
+      "queue_number": 3,
+      "status": "Completed",
+      "priority": "Low",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 4,
+    "fields": {
+      "patient": 24,
+      "department": "Emergency",
+      "provider_name": "Dr. Michael Tan",
+      "appointment_date": "2026-07-12",
+      "appointment_time": "16:45:00",
+      "queue_number": 4,
+      "status": "Completed",
+      "priority": "Medium",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 5,
+    "fields": {
+      "patient": 1,
+      "department": "Internal Medicine",
+      "provider_name": "Dr. Michael Tan",
+      "appointment_date": "2026-07-15",
+      "appointment_time": "10:00:00",
+      "queue_number": 5,
+      "status": "Scheduled",
+      "priority": "Medium",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 6,
+    "fields": {
+      "patient": 4,
+      "department": "Emergency",
+      "provider_name": "Dr. Paolo Mercado",
+      "appointment_date": "2026-07-18",
+      "appointment_time": "08:30:00",
+      "queue_number": 6,
+      "status": "Completed",
+      "priority": "Medium",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 7,
+    "fields": {
+      "patient": 4,
+      "department": "Dermatology",
+      "provider_name": "Dr. Grace Villareal",
+      "appointment_date": "2026-07-18",
+      "appointment_time": "08:15:00",
+      "queue_number": 7,
+      "status": "Scheduled",
+      "priority": "Low",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 8,
+    "fields": {
+      "patient": 15,
+      "department": "Orthopedics",
+      "provider_name": "Dr. Grace Villareal",
+      "appointment_date": "2026-07-18",
+      "appointment_time": "08:00:00",
+      "queue_number": 8,
+      "status": "Completed",
+      "priority": "Medium",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 9,
+    "fields": {
+      "patient": 17,
+      "department": "Emergency",
+      "provider_name": "Dr. Paolo Mercado",
+      "appointment_date": "2026-07-07",
+      "appointment_time": "13:45:00",
+      "queue_number": 9,
+      "status": "Completed",
+      "priority": "Medium",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 10,
+    "fields": {
+      "patient": 8,
+      "department": "Orthopedics",
+      "provider_name": "Dr. Michael Tan",
+      "appointment_date": "2026-07-17",
+      "appointment_time": "13:15:00",
+      "queue_number": 10,
+      "status": "Scheduled",
+      "priority": "Low",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 11,
+    "fields": {
+      "patient": 11,
+      "department": "Pediatrics",
+      "provider_name": "Dr. Michael Tan",
+      "appointment_date": "2026-07-03",
+      "appointment_time": "11:45:00",
+      "queue_number": 11,
+      "status": "Completed",
+      "priority": "Medium",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 12,
+    "fields": {
+      "patient": 25,
+      "department": "Respiratory Medicine",
+      "provider_name": "Dr. Michael Tan",
+      "appointment_date": "2026-07-05",
+      "appointment_time": "14:15:00",
+      "queue_number": 12,
+      "status": "No-show",
+      "priority": "Low",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 13,
+    "fields": {
+      "patient": 4,
+      "department": "Dermatology",
+      "provider_name": "Dr. Michael Tan",
+      "appointment_date": "2026-07-13",
+      "appointment_time": "16:15:00",
+      "queue_number": 13,
+      "status": "Completed",
+      "priority": "High",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 14,
+    "fields": {
+      "patient": 13,
+      "department": "Gastroenterology",
+      "provider_name": "Dr. Grace Villareal",
+      "appointment_date": "2026-07-11",
+      "appointment_time": "15:15:00",
+      "queue_number": 14,
+      "status": "Scheduled",
+      "priority": "Low",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 15,
+    "fields": {
+      "patient": 11,
+      "department": "General Medicine",
+      "provider_name": "Nurse Aurora Santos",
+      "appointment_date": "2026-07-18",
+      "appointment_time": "16:45:00",
+      "queue_number": 15,
+      "status": "Scheduled",
+      "priority": "Medium",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 16,
+    "fields": {
+      "patient": 17,
+      "department": "Pediatrics",
+      "provider_name": "Dr. Elena Ramirez",
+      "appointment_date": "2026-07-03",
+      "appointment_time": "09:15:00",
+      "queue_number": 16,
+      "status": "Scheduled",
+      "priority": "Low",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 17,
+    "fields": {
+      "patient": 25,
+      "department": "Neurology",
+      "provider_name": "Dr. Cristina Lim",
+      "appointment_date": "2026-07-06",
+      "appointment_time": "13:15:00",
+      "queue_number": 17,
+      "status": "Completed",
+      "priority": "Low",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 18,
+    "fields": {
+      "patient": 5,
+      "department": "Pediatrics",
+      "provider_name": "Dr. Grace Villareal",
+      "appointment_date": "2026-07-18",
+      "appointment_time": "16:30:00",
+      "queue_number": 18,
+      "status": "Scheduled",
+      "priority": "Medium",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 19,
+    "fields": {
+      "patient": 14,
+      "department": "Pediatrics",
+      "provider_name": "Dr. Grace Villareal",
+      "appointment_date": "2026-07-03",
+      "appointment_time": "13:00:00",
+      "queue_number": 19,
+      "status": "Scheduled",
+      "priority": "High",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 20,
+    "fields": {
+      "patient": 3,
+      "department": "General Medicine",
+      "provider_name": "Dr. Grace Villareal",
+      "appointment_date": "2026-07-09",
+      "appointment_time": "09:45:00",
+      "queue_number": 20,
+      "status": "No-show",
+      "priority": "Low",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 21,
+    "fields": {
+      "patient": 9,
+      "department": "Emergency",
+      "provider_name": "Dr. Cristina Lim",
+      "appointment_date": "2026-07-20",
+      "appointment_time": "10:00:00",
+      "queue_number": 21,
+      "status": "Scheduled",
+      "priority": "Low",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 22,
+    "fields": {
+      "patient": 6,
+      "department": "Dermatology",
+      "provider_name": "Dr. Grace Villareal",
+      "appointment_date": "2026-07-09",
+      "appointment_time": "08:15:00",
+      "queue_number": 22,
+      "status": "Completed",
+      "priority": "Medium",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 23,
+    "fields": {
+      "patient": 7,
+      "department": "Respiratory Medicine",
+      "provider_name": "Dr. Grace Villareal",
+      "appointment_date": "2026-07-10",
+      "appointment_time": "16:15:00",
+      "queue_number": 23,
+      "status": "Completed",
+      "priority": "High",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 24,
+    "fields": {
+      "patient": 2,
+      "department": "Emergency",
+      "provider_name": "Nurse Aurora Santos",
+      "appointment_date": "2026-07-01",
+      "appointment_time": "08:15:00",
+      "queue_number": 24,
+      "status": "Scheduled",
+      "priority": "Low",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 25,
+    "fields": {
+      "patient": 22,
+      "department": "Emergency",
+      "provider_name": "Dr. Grace Villareal",
+      "appointment_date": "2026-07-14",
+      "appointment_time": "16:45:00",
+      "queue_number": 25,
+      "status": "Completed",
+      "priority": "High",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 26,
+    "fields": {
+      "patient": 11,
+      "department": "Gastroenterology",
+      "provider_name": "Dr. Elena Ramirez",
+      "appointment_date": "2026-07-07",
+      "appointment_time": "10:45:00",
+      "queue_number": 26,
+      "status": "Completed",
+      "priority": "Low",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 27,
+    "fields": {
+      "patient": 21,
+      "department": "General Medicine",
+      "provider_name": "Dr. Elena Ramirez",
+      "appointment_date": "2026-07-09",
+      "appointment_time": "15:15:00",
+      "queue_number": 27,
+      "status": "Completed",
+      "priority": "Low",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 28,
+    "fields": {
+      "patient": 17,
+      "department": "General Medicine",
+      "provider_name": "Nurse Aurora Santos",
+      "appointment_date": "2026-07-10",
+      "appointment_time": "11:30:00",
+      "queue_number": 28,
+      "status": "Scheduled",
+      "priority": "Low",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 29,
+    "fields": {
+      "patient": 1,
+      "department": "Emergency",
+      "provider_name": "Dr. Grace Villareal",
+      "appointment_date": "2026-07-09",
+      "appointment_time": "14:30:00",
+      "queue_number": 29,
+      "status": "Scheduled",
+      "priority": "High",
+      "notes": ""
+    }
+  },
+  {
+    "model": "core.appointment",
+    "pk": 30,
+    "fields": {
+      "patient": 10,
+      "department": "General Medicine",
+      "provider_name": "Dr. Grace Villareal",
+      "appointment_date": "2026-07-07",
+      "appointment_time": "14:15:00",
+      "queue_number": 30,
+      "status": "Scheduled",
+      "priority": "Low",
+      "notes": ""
+    }
+  }
+]

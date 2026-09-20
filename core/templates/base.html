@@ -1,0 +1,57 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="TeleHealth RHU patient and healthcare management system">
+  <title>{% block title %}TeleHealth RHU{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'core/app.css' %}">
+</head>
+<body class="{% if public_page %}public-body{% endif %}">
+<a class="skip-link" href="#main-content">Skip to main content</a>
+{% if public_page %}
+  <main class="public-shell" id="main-content" tabindex="-1">
+    <a class="public-brand" href="{% url 'login' %}"><span class="brand-mark">+</span><span><b>RHU Lumang Bayan</b><small>TeleHealth System</small></span></a>
+    {% include "includes/messages.html" %}
+    {% block public_content %}{% endblock %}
+  </main>
+{% else %}
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="{% if request.user.patient_profile %}{% url 'patient_dashboard' %}{% elif request.user.is_superuser or request.user.staff_profile.role == 'Admin' %}{% url 'admin_dashboard' %}{% else %}{% url 'specialist_dashboard' %}{% endif %}"><span class="brand-mark">+</span><span><b>RHU Lumang Bayan</b><small>Connected Care</small></span></a>
+      <span class="nav-label">Modules</span>
+      <nav>
+        {% if request.user.patient_profile %}
+          <a class="nav-link active" aria-current="page" href="{% url 'patient_dashboard' %}"><span class="nav-icon">P</span>My Health Dashboard</a>
+        {% else %}
+          {% if request.user.is_superuser or request.user.staff_profile.role == 'Admin' %}<a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" href="{% url 'admin_dashboard' %}"><span class="nav-icon">D</span>Admin Dashboard</a>{% else %}<a class="nav-link {% if request.resolver_match.url_name == 'specialist_dashboard' %}active{% endif %}" href="{% url 'specialist_dashboard' %}"><span class="nav-icon">D</span>Specialist Dashboard</a>{% endif %}
+          {% if request.user.is_superuser or request.user.staff_profile.role == 'Admin' %}<a class="nav-link {% if 'user' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'users' %}"><span class="nav-icon">U</span>User Management</a>{% endif %}
+          <a class="nav-link {% if 'patient' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'patients' %}"><span class="nav-icon">P</span>Patient Management</a>
+          <a class="nav-link {% if 'appointment' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'appointments' %}"><span class="nav-icon">A</span>Appointments</a>
+          <a class="nav-link {% if request.resolver_match.url_name == 'teleconsultation' %}active{% endif %}" href="{% url 'teleconsultation' %}"><span class="nav-icon">T</span>Teleconsultation</a>
+           {% if request.user.is_superuser or request.user.staff_profile.role == 'Specialist' or request.user.staff_profile.role == 'Physician' or request.user.staff_profile.role == 'Nurse' or request.user.staff_profile.role == 'Midwife' %}<a class="nav-link {% if 'consultation' in request.resolver_match.url_name or request.resolver_match.url_name == 'records' %}active{% endif %}" href="{% url 'records' %}"><span class="nav-icon">H</span>Health Records</a>{% endif %}
+          <a class="nav-link {% if request.resolver_match.url_name == 'triage' %}active{% endif %}" href="{% url 'triage' %}"><span class="nav-icon">R</span>Clinical Triage</a>
+          {% if request.user.is_superuser or request.user.staff_profile.role == 'Admin' %}<a class="nav-link {% if 'campaign' in request.resolver_match.url_name or request.resolver_match.url_name == 'communications' %}active{% endif %}" href="{% url 'communications' %}"><span class="nav-icon">C</span>Communications</a>
+          <a class="nav-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}" href="{% url 'reports' %}"><span class="nav-icon">R</span>Reports & Analytics</a>{% endif %}
+          {% if request.user.is_superuser or request.user.staff_profile.role == 'Admin' %}<a class="nav-link {% if 'inventory' in request.resolver_match.url_name or request.resolver_match.url_name == 'administration' %}active{% endif %}" href="{% url 'administration' %}"><span class="nav-icon">S</span>Administration</a>{% endif %}
+        {% endif %}
+      </nav>
+      <div class="sidebar-user">
+        <span class="avatar">{{ request.user.first_name|first|default:'U' }}{{ request.user.last_name|first }}</span>
+        <span><b>{{ request.user.get_full_name|default:request.user.username }}</b><small>{% if request.user.patient_profile %}Patient{% elif request.user.staff_profile %}{{ request.user.staff_profile.role }}{% else %}Administrator{% endif %}</small></span>
+      </div>
+    </aside>
+    <button class="menu-scrim" type="button" data-menu-close aria-label="Close navigation menu" tabindex="-1"></button>
+    <section class="workspace">
+      <header class="topbar"><button class="menu-button" type="button" data-menu aria-label="Toggle menu" aria-controls="sidebar" aria-expanded="false">Menu</button><span>TeleHealth RHU - Brgy. Lumang Bayan, Plaridel, Bulacan</span><div><time>{% now "D, M j, Y" %}</time><form action="{% url 'logout' %}" method="post">{% csrf_token %}<button class="text-button" type="submit">Secure logout</button></form></div></header>
+      <main class="content" id="main-content" tabindex="-1">
+        {% include "includes/messages.html" %}
+        {% block content %}{% endblock %}
+      </main>
+    </section>
+  </div>
+{% endif %}
+<script src="{% static 'core/app.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard | TeleHealth RHU{% endblock %}
+{% block content %}
+<section class="care-hero">
+  <div><span class="eyebrow">ADMIN CARE COORDINATION</span><h1>Connect every patient with the right care.</h1><p>Review appointment requests, match an available specialist, and keep both sides informed from one workspace.</p></div>
+  <a class="button button-accent" href="#pending-requests">Review requests</a>
+</section>
+<div class="metric-grid">
+  <article class="metric"><span class="metric-icon blue">P</span><small>Registered patients</small><strong>{{ stats.patients }}</strong><p>{{ stats.active_patients }} active</p></article>
+  <article class="metric"><span class="metric-icon indigo">A</span><small>Appointments today</small><strong>{{ stats.appointments_today }}</strong><p>{{ stats.pending }} awaiting confirmation</p></article>
+  <article class="metric"><span class="metric-icon purple">T</span><small>Triage cases</small><strong>{{ stats.triage }}</strong><p>{{ stats.high_triage }} high priority</p></article>
+  <article class="metric"><span class="metric-icon red">!</span><small>Low stock items</small><strong>{{ stats.low_stock }}</strong><p>At reorder level</p></article>
+</div>
+<section class="card priority-card" id="pending-requests">
+  <div class="card-head"><div><span class="eyebrow dark">ACTION NEEDED</span><h2>Patient appointment requests</h2><p>Confirm a specialist and final schedule to notify both participants.</p></div><a href="{% url 'appointments' %}?status=Pending">View all</a></div>
+  <div class="request-list">{% for item in pending_requests %}<article><div><b>{{ item.patient.name }}</b><small>{{ item.patient.patient_code }} - {{ item.department }}</small></div><div><b>{{ item.appointment_date }} at {{ item.appointment_time|time:'H:i' }}</b><small>{{ item.consultation_type }} - {{ item.reason|default:'No reason supplied' }}</small></div><a class="button button-accent" href="{% url 'appointment_confirm' item.pk %}">Match specialist</a></article>{% empty %}<div class="empty-state"><b>All requests are coordinated</b><p>New patient requests will appear here.</p></div>{% endfor %}</div>
+</section>
+<div class="two-column">
+  <section class="card"><div class="card-head"><h2>Upcoming confirmed care</h2><a href="{% url 'appointments' %}">View all</a></div><div class="compact-list">{% for item in appointments %}<div><span><b>{{ item.patient.name }}</b><small>{{ item.appointment_date }} at {{ item.appointment_time|time:'H:i' }} - {{ item.provider_name }}</small></span><span class="badge">{{ item.status }}</span></div>{% empty %}<p class="empty">No upcoming appointments.</p>{% endfor %}</div></section>
+  <section class="card"><div class="card-head"><h2>Recent clinical triage</h2><a href="{% url 'triage' %}">View all</a></div><div class="compact-list">{% for item in triage_cases %}<div><span><b>{{ item.patient.name }}</b><small>{{ item.predicted_specialty }}</small></span><span class="badge badge-{{ item.priority|lower }}">{{ item.priority }}</span></div>{% empty %}<p class="empty">No triage records.</p>{% endfor %}</div></section>
+</div>
+{% endblock %}

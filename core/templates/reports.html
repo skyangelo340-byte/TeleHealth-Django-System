@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Reports | TeleHealth RHU{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="module-tag">SYSTEM INSIGHTS</span><h1>Reports & Analytics</h1><p>Live aggregate reporting from TeleHealth records.</p></div><button class="button button-secondary" type="button" onclick="window.print()">Print report</button></div>
+<div class="two-column"><section class="card"><div class="card-head"><h2>Appointments by Status</h2></div><div class="bar-list">{% for row in status_counts %}<div><span>{{ row.status }}</span><meter min="0" max="50" value="{{ row.total }}"></meter><b>{{ row.total }}</b></div>{% empty %}<p class="empty">No appointment data.</p>{% endfor %}</div></section><section class="card"><div class="card-head"><h2>Patients by Barangay</h2></div><div class="bar-list">{% for row in barangay_counts %}<div><span>{{ row.barangay }}</span><meter min="0" max="30" value="{{ row.total }}"></meter><b>{{ row.total }}</b></div>{% empty %}<p class="empty">No patient data.</p>{% endfor %}</div></section></div>
+{% endblock %}
