@@ -46,18 +46,18 @@ class Command(BaseCommand):
             )
 
         else:
-    user.set_password(password)
+            user.set_password(password)
 
-    user.is_staff = True
-    user.is_superuser = True
+            user.is_staff = True
+            user.is_superuser = True
 
-    if email:
-        user.email = email
+            if email:
+                user.email = email
 
-    user.save()
+            user.save()
 
-    self.stdout.write(
-        self.style.SUCCESS(
-            f"Admin account '{username}' updated successfully."
-        )
-    )
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Admin account '{username}' updated successfully."
+                )
+            )
