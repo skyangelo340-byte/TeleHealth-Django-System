@@ -46,25 +46,18 @@ class Command(BaseCommand):
             )
 
         else:
-            changed = False
+    user.set_password(password)
 
-            if not user.is_staff:
-                user.is_staff = True
-                changed = True
+    user.is_staff = True
+    user.is_superuser = True
 
-            if not user.is_superuser:
-                user.is_superuser = True
-                changed = True
+    if email:
+        user.email = email
 
-            if email and user.email != email:
-                user.email = email
-                changed = True
+    user.save()
 
-            if changed:
-                user.save()
-
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"Admin account '{username}' already exists."
-                )
-            )
+    self.stdout.write(
+        self.style.SUCCESS(
+            f"Admin account '{username}' updated successfully."
+        )
+    )
