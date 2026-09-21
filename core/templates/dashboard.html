@@ -1,22 +1,326 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block title %}Admin Dashboard | TeleHealth RHU{% endblock %}
+
 {% block content %}
-<section class="care-hero">
-  <div><span class="eyebrow">ADMIN CARE COORDINATION</span><h1>Connect every patient with the right care.</h1><p>Review appointment requests, match an available specialist, and keep both sides informed from one workspace.</p></div>
-  <a class="button button-accent" href="#pending-requests">Review requests</a>
-</section>
-<div class="metric-grid">
-  <article class="metric"><span class="metric-icon blue">P</span><small>Registered patients</small><strong>{{ stats.patients }}</strong><p>{{ stats.active_patients }} active</p></article>
-  <article class="metric"><span class="metric-icon indigo">A</span><small>Appointments today</small><strong>{{ stats.appointments_today }}</strong><p>{{ stats.pending }} awaiting confirmation</p></article>
-  <article class="metric"><span class="metric-icon purple">T</span><small>Triage cases</small><strong>{{ stats.triage }}</strong><p>{{ stats.high_triage }} high priority</p></article>
-  <article class="metric"><span class="metric-icon red">!</span><small>Low stock items</small><strong>{{ stats.low_stock }}</strong><p>At reorder level</p></article>
+
+<div class="admin-dashboard">
+
+  <section class="admin-welcome">
+    <div class="welcome-content">
+      <div class="admin-label">
+        <span class="status-dot"></span>
+        TELEHEALTH ADMINISTRATION
+      </div>
+
+      <h1>Good day, Administrator.</h1>
+
+      <p>
+        Monitor patient care, coordinate appointments, and manage
+        healthcare operations from one centralized workspace.
+      </p>
+
+      <div class="welcome-actions">
+        <a href="#pending-requests" class="admin-btn admin-btn-primary">
+          <span>Review requests</span>
+          <span class="btn-arrow">→</span>
+        </a>
+
+        <a href="{% url 'appointments' %}" class="admin-btn admin-btn-light">
+          View appointments
+        </a>
+      </div>
+    </div>
+
+    <div class="welcome-decoration">
+      <div class="medical-circle circle-one"></div>
+      <div class="medical-circle circle-two"></div>
+      <div class="medical-cross">+</div>
+    </div>
+  </section>
+
+
+  <div class="dashboard-section-header">
+    <div>
+      <span class="section-eyebrow">OVERVIEW</span>
+      <h2>Today's operations</h2>
+      <p>A quick summary of the current TeleHealth activity.</p>
+    </div>
+  </div>
+
+
+  <section class="admin-stats">
+
+    <article class="admin-stat-card">
+      <div class="stat-top">
+        <div class="stat-icon stat-blue">
+          <span>👥</span>
+        </div>
+        <span class="stat-label">PATIENTS</span>
+      </div>
+
+      <div class="stat-number">{{ stats.patients }}</div>
+
+      <div class="stat-footer">
+        <span class="stat-positive">● Active</span>
+        <span>{{ stats.active_patients }}</span>
+      </div>
+    </article>
+
+
+    <article class="admin-stat-card">
+      <div class="stat-top">
+        <div class="stat-icon stat-indigo">
+          <span>📅</span>
+        </div>
+        <span class="stat-label">APPOINTMENTS</span>
+      </div>
+
+      <div class="stat-number">{{ stats.appointments_today }}</div>
+
+      <div class="stat-footer">
+        <span class="stat-warning">● Pending</span>
+        <span>{{ stats.pending }}</span>
+      </div>
+    </article>
+
+
+    <article class="admin-stat-card">
+      <div class="stat-top">
+        <div class="stat-icon stat-purple">
+          <span>🩺</span>
+        </div>
+        <span class="stat-label">TRIAGE CASES</span>
+      </div>
+
+      <div class="stat-number">{{ stats.triage }}</div>
+
+      <div class="stat-footer">
+        <span class="stat-danger">● High priority</span>
+        <span>{{ stats.high_triage }}</span>
+      </div>
+    </article>
+
+
+    <article class="admin-stat-card">
+      <div class="stat-top">
+        <div class="stat-icon stat-red">
+          <span>📦</span>
+        </div>
+        <span class="stat-label">LOW STOCK</span>
+      </div>
+
+      <div class="stat-number">{{ stats.low_stock }}</div>
+
+      <div class="stat-footer">
+        <span class="stat-danger">● Attention needed</span>
+        <span>Inventory</span>
+      </div>
+    </article>
+
+  </section>
+
+
+  <section class="admin-panel priority-panel" id="pending-requests">
+
+    <div class="panel-header">
+
+      <div class="panel-title">
+        <div class="panel-icon">!</div>
+
+        <div>
+          <span class="section-eyebrow">ACTION REQUIRED</span>
+          <h2>Patient appointment requests</h2>
+          <p>
+            Review pending requests and assign the appropriate specialist.
+          </p>
+        </div>
+      </div>
+
+      <a href="{% url 'appointments' %}?status=Pending"
+         class="panel-link">
+        View all requests →
+      </a>
+
+    </div>
+
+
+    <div class="request-table">
+
+      {% for item in pending_requests %}
+
+      <article class="request-row">
+
+        <div class="patient-info">
+          <div class="patient-avatar">
+            {{ item.patient.name|first|upper }}
+          </div>
+
+          <div>
+            <strong>{{ item.patient.name }}</strong>
+            <span>{{ item.patient.patient_code }}</span>
+          </div>
+        </div>
+
+
+        <div class="request-detail">
+          <span class="detail-label">DEPARTMENT</span>
+          <strong>{{ item.department }}</strong>
+        </div>
+
+
+        <div class="request-detail">
+          <span class="detail-label">SCHEDULE</span>
+          <strong>{{ item.appointment_date }}</strong>
+          <span>{{ item.appointment_time|time:'H:i' }}</span>
+        </div>
+
+
+        <div class="request-detail">
+          <span class="detail-label">CONSULTATION</span>
+          <strong>{{ item.consultation_type }}</strong>
+        </div>
+
+
+        <div class="request-action">
+          <a href="{% url 'appointment_confirm' item.pk %}"
+             class="assign-btn">
+            Match specialist
+            <span>→</span>
+          </a>
+        </div>
+
+      </article>
+
+      {% empty %}
+
+      <div class="admin-empty-state">
+        <div class="empty-icon">✓</div>
+        <h3>All requests are coordinated</h3>
+        <p>
+          There are currently no pending appointment requests.
+        </p>
+      </div>
+
+      {% endfor %}
+
+    </div>
+
+  </section>
+
+
+  <div class="admin-content-grid">
+
+    <section class="admin-panel">
+
+      <div class="panel-header simple-header">
+
+        <div>
+          <span class="section-eyebrow">SCHEDULE</span>
+          <h2>Upcoming confirmed care</h2>
+          <p>Recently confirmed patient appointments.</p>
+        </div>
+
+        <a href="{% url 'appointments' %}" class="panel-link">
+          View all →
+        </a>
+
+      </div>
+
+
+      <div class="admin-list">
+
+        {% for item in appointments %}
+
+        <div class="admin-list-item">
+
+          <div class="list-avatar">
+            {{ item.patient.name|first|upper }}
+          </div>
+
+          <div class="list-main">
+            <strong>{{ item.patient.name }}</strong>
+
+            <span>
+              {{ item.appointment_date }}
+              ·
+              {{ item.appointment_time|time:'H:i' }}
+            </span>
+
+            <small>{{ item.provider_name }}</small>
+          </div>
+
+          <span class="status-badge status-confirmed">
+            {{ item.status }}
+          </span>
+
+        </div>
+
+        {% empty %}
+
+        <div class="small-empty">
+          No upcoming appointments.
+        </div>
+
+        {% endfor %}
+
+      </div>
+
+    </section>
+
+
+    <section class="admin-panel">
+
+      <div class="panel-header simple-header">
+
+        <div>
+          <span class="section-eyebrow">CLINICAL</span>
+          <h2>Recent clinical triage</h2>
+          <p>Latest patient triage classifications.</p>
+        </div>
+
+        <a href="{% url 'triage' %}" class="panel-link">
+          View all →
+        </a>
+
+      </div>
+
+
+      <div class="admin-list">
+
+        {% for item in triage_cases %}
+
+        <div class="admin-list-item">
+
+          <div class="list-avatar triage-avatar">+</div>
+
+          <div class="list-main">
+            <strong>{{ item.patient.name }}</strong>
+
+            <span>{{ item.predicted_specialty }}</span>
+
+            <small>Clinical triage assessment</small>
+          </div>
+
+          <span class="status-badge badge-{{ item.priority|lower }}">
+            {{ item.priority }}
+          </span>
+
+        </div>
+
+        {% empty %}
+
+        <div class="small-empty">
+          No triage records available.
+        </div>
+
+        {% endfor %}
+
+      </div>
+
+    </section>
+
+  </div>
+
 </div>
-<section class="card priority-card" id="pending-requests">
-  <div class="card-head"><div><span class="eyebrow dark">ACTION NEEDED</span><h2>Patient appointment requests</h2><p>Confirm a specialist and final schedule to notify both participants.</p></div><a href="{% url 'appointments' %}?status=Pending">View all</a></div>
-  <div class="request-list">{% for item in pending_requests %}<article><div><b>{{ item.patient.name }}</b><small>{{ item.patient.patient_code }} - {{ item.department }}</small></div><div><b>{{ item.appointment_date }} at {{ item.appointment_time|time:'H:i' }}</b><small>{{ item.consultation_type }} - {{ item.reason|default:'No reason supplied' }}</small></div><a class="button button-accent" href="{% url 'appointment_confirm' item.pk %}">Match specialist</a></article>{% empty %}<div class="empty-state"><b>All requests are coordinated</b><p>New patient requests will appear here.</p></div>{% endfor %}</div>
-</section>
-<div class="two-column">
-  <section class="card"><div class="card-head"><h2>Upcoming confirmed care</h2><a href="{% url 'appointments' %}">View all</a></div><div class="compact-list">{% for item in appointments %}<div><span><b>{{ item.patient.name }}</b><small>{{ item.appointment_date }} at {{ item.appointment_time|time:'H:i' }} - {{ item.provider_name }}</small></span><span class="badge">{{ item.status }}</span></div>{% empty %}<p class="empty">No upcoming appointments.</p>{% endfor %}</div></section>
-  <section class="card"><div class="card-head"><h2>Recent clinical triage</h2><a href="{% url 'triage' %}">View all</a></div><div class="compact-list">{% for item in triage_cases %}<div><span><b>{{ item.patient.name }}</b><small>{{ item.predicted_specialty }}</small></span><span class="badge badge-{{ item.priority|lower }}">{{ item.priority }}</span></div>{% empty %}<p class="empty">No triage records.</p>{% endfor %}</div></section>
-</div>
+
 {% endblock %}
