@@ -138,22 +138,61 @@ def _audit(request, action, model, object_id="", details=""):
 
 def login_view(request):
     if request.user.is_authenticated:
+        if request.user.is_superuser:
+            return redirect("/admin/")
         return redirect(_dashboard_name(request.user))
+
     if request.method == "POST":
         identifier = request.POST.get("email", "").strip().lower()
         password = request.POST.get("password", "")
-        candidate = User.objects.filter(Q(username__iexact=identifier) | Q(email__iexact=identifier)).first()
-        user = authenticate(request, username=candidate.username if candidate else identifier, password=password)
+
+        candidate = User.objects.filter(
+            Q(username__iexact=identifier) | Q(email__iexact=identifier)
+        ).first()
+
+        user = authenticate(
+            request,
+            username=candidate.username if candidate else identifier,
+            password=password,
+        )
+
         if user:
+            if user.is_superuser:
+                messages.info(
+                    request,
+                    "Administrator accounts must sign in through the Admin Portal."
+                )
+                return redirect("/admin/")
+
             login(request, user)
             _audit(request, "LOGIN", "User", user.pk, "Successful web login")
+
             next_url = request.POST.get("next", "")
-            if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+            if not url_has_allowed_host_and_scheme(
+                next_url,
+                allowed_hosts={request.get_host()},
+                require_https=request.is_secure(),
+            ):
                 next_url = ""
+
             return redirect(next_url or _dashboard_name(user))
-        _audit(request, "LOGIN_FAILED", "User", details=f"Failed web login for {identifier or 'unknown'}")
+
+        _audit(
+            request,
+            "LOGIN_FAILED",
+            "User",
+            details=f"Failed web login for {identifier or 'unknown'}",
+        )
         messages.error(request, "Invalid email or password.")
-    return render(request, "auth/login.html", {"public_page": True, "identifier": request.POST.get("email", "")})
+
+    return render(
+        request,
+        "auth/login.html",
+        {
+            "public_page": True,
+            "identifier": request.POST.get("email", ""),
+        },
+    )
 
 
 def register_view(request):
