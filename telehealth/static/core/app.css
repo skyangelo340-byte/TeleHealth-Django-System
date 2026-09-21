@@ -1077,3 +1077,471 @@
     }
 
 }
+
+/* =========================================================
+   TELEHEALTH MOBILE-FIRST RESPONSIVE UI
+   ========================================================= */
+
+/* Tablet */
+@media (max-width: 900px) {
+
+    .admin-dashboard {
+        width: 100%;
+    }
+
+    .admin-welcome {
+        min-height: 250px;
+        padding: 32px;
+        border-radius: 20px;
+    }
+
+    .admin-welcome h1 {
+        max-width: 600px;
+        font-size: 34px;
+    }
+
+    .welcome-decoration {
+        opacity: .35;
+    }
+
+    .admin-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .admin-content-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .request-row {
+        grid-template-columns: 1.5fr 1fr auto;
+        gap: 14px;
+    }
+
+    .request-detail:nth-child(2) {
+        display: none;
+    }
+
+    .request-detail:nth-child(4) {
+        display: none;
+    }
+
+    .panel-header {
+        padding: 20px;
+    }
+}
+
+
+/* =========================================================
+   PHONE
+   ========================================================= */
+
+@media (max-width: 650px) {
+
+    /* Page */
+
+    .content {
+        width: 100%;
+        padding: 14px;
+        overflow-x: hidden;
+    }
+
+    .admin-dashboard {
+        width: 100%;
+        max-width: none;
+    }
+
+
+    /* Topbar */
+
+    .topbar {
+        min-height: 58px;
+        padding: 0 14px;
+        gap: 10px;
+    }
+
+    .topbar > span {
+        max-width: 190px;
+        overflow: hidden;
+        color: #52617d;
+        font-size: 10px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .topbar time {
+        display: none;
+    }
+
+    .topbar .text-button {
+        display: none;
+    }
+
+    .menu-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 42px;
+        min-height: 38px;
+        padding: 0 10px;
+        border-radius: 10px;
+        font-size: 0;
+    }
+
+    .menu-button::before {
+        content: "☰";
+        font-size: 19px;
+        line-height: 1;
+    }
+
+
+    /* Hero */
+
+    .admin-welcome {
+        min-height: 0;
+        margin-bottom: 24px;
+        padding: 26px 22px;
+        border-radius: 18px;
+    }
+
+    .admin-label {
+        margin-bottom: 12px;
+        font-size: 9px;
+    }
+
+    .admin-welcome h1 {
+        max-width: 100%;
+        margin-bottom: 10px;
+        font-size: 29px;
+        line-height: 1.12;
+    }
+
+    .admin-welcome p {
+        font-size: 12px;
+        line-height: 1.65;
+    }
+
+    .welcome-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 9px;
+        margin-top: 20px;
+    }
+
+    .admin-btn {
+        width: 100%;
+        min-height: 45px;
+        border-radius: 11px;
+        font-size: 12px;
+    }
+
+    .welcome-decoration {
+        display: none;
+    }
+
+
+    /* Overview */
+
+    .dashboard-section-header {
+        margin-bottom: 12px;
+    }
+
+    .section-eyebrow {
+        font-size: 8px;
+    }
+
+    .dashboard-section-header h2,
+    .panel-header h2 {
+        font-size: 18px;
+    }
+
+    .dashboard-section-header p,
+    .panel-header p {
+        font-size: 11px;
+        line-height: 1.5;
+    }
+
+
+    /* Statistics */
+
+    .admin-stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .admin-stat-card {
+        padding: 15px;
+        border-radius: 15px;
+    }
+
+    .stat-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        font-size: 15px;
+    }
+
+    .stat-label {
+        font-size: 7px;
+    }
+
+    .stat-number {
+        margin-top: 14px;
+        font-size: 27px;
+    }
+
+    .stat-footer {
+        margin-top: 11px;
+        padding-top: 9px;
+        font-size: 9px;
+    }
+
+
+    /* Panels */
+
+    .admin-panel {
+        border-radius: 16px;
+        box-shadow: 0 5px 20px rgba(20,43,112,.05);
+    }
+
+    .priority-panel {
+        margin-bottom: 16px;
+    }
+
+    .panel-header,
+    .simple-header {
+        min-height: 0;
+        padding: 17px;
+    }
+
+    .panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .panel-title {
+        align-items: flex-start;
+        gap: 11px;
+    }
+
+    .panel-icon {
+        width: 35px;
+        height: 35px;
+        flex-basis: 35px;
+        border-radius: 9px;
+        font-size: 15px;
+    }
+
+    .panel-link {
+        font-size: 10px;
+    }
+
+
+    /* Appointment requests become cards */
+
+    .request-table {
+        padding: 7px;
+    }
+
+    .request-row {
+        display: block;
+        margin: 7px;
+        padding: 16px;
+        border: 1px solid #e9edf4;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 4px 14px rgba(20,43,112,.035);
+    }
+
+    .request-row:hover {
+        background: #fff;
+    }
+
+    .patient-info {
+        padding-bottom: 13px;
+        margin-bottom: 13px;
+        border-bottom: 1px solid #eef1f5;
+    }
+
+    .patient-avatar {
+        width: 38px;
+        height: 38px;
+        flex-basis: 38px;
+    }
+
+    .request-detail {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 7px 0;
+    }
+
+    .detail-label {
+        flex: 0 0 auto;
+        margin: 0;
+        font-size: 7px;
+    }
+
+    .request-detail strong {
+        text-align: right;
+        font-size: 11px;
+    }
+
+    .request-detail > span:not(.detail-label) {
+        margin: 0;
+        text-align: right;
+        font-size: 10px;
+    }
+
+    .request-action {
+        margin-top: 10px;
+        padding-top: 12px;
+        border-top: 1px solid #eef1f5;
+    }
+
+    .assign-btn {
+        width: 100%;
+        justify-content: center;
+        min-height: 42px;
+        border-radius: 10px;
+        font-size: 11px;
+    }
+
+
+    /* Lists */
+
+    .admin-list {
+        padding: 5px 9px 9px;
+    }
+
+    .admin-list-item {
+        gap: 10px;
+        padding: 13px 8px;
+    }
+
+    .list-avatar {
+        width: 36px;
+        height: 36px;
+        flex-basis: 36px;
+        border-radius: 10px;
+    }
+
+    .patient-info strong,
+    .list-main strong {
+        font-size: 11px;
+    }
+
+    .patient-info span,
+    .list-main span,
+    .list-main small {
+        font-size: 9px;
+    }
+
+    .status-badge {
+        padding: 5px 7px;
+        font-size: 7px;
+    }
+
+
+    /* Empty state */
+
+    .admin-empty-state {
+        padding: 38px 15px;
+    }
+
+    .empty-icon {
+        width: 42px;
+        height: 42px;
+        font-size: 17px;
+    }
+
+
+    /* Sidebar mobile */
+
+    .sidebar {
+        width: min(86vw, 300px);
+        min-width: min(86vw, 300px);
+    }
+
+    .sidebar-brand-area {
+        padding: 21px 17px 17px;
+    }
+
+    .sidebar-navigation {
+        padding: 20px 10px;
+    }
+
+    .nav-link {
+        min-height: 45px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        font-size: 12px;
+    }
+
+    .nav-icon {
+        width: 27px;
+        height: 27px;
+        flex-basis: 27px;
+        border-radius: 8px;
+        font-size: 10px;
+    }
+
+    .nav-arrow {
+        font-size: 21px;
+    }
+
+    .sidebar-bottom {
+        padding-bottom: 15px;
+    }
+
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 390px) {
+
+    .content {
+        padding: 10px;
+    }
+
+    .admin-welcome {
+        padding: 22px 18px;
+    }
+
+    .admin-welcome h1 {
+        font-size: 26px;
+    }
+
+    .admin-stats {
+        gap: 8px;
+    }
+
+    .admin-stat-card {
+        padding: 13px;
+    }
+
+    .stat-number {
+        font-size: 24px;
+    }
+
+    .stat-label {
+        font-size: 6px;
+    }
+
+    .stat-footer {
+        font-size: 8px;
+    }
+
+    .request-row {
+        margin: 5px;
+        padding: 14px;
+    }
+
+}
