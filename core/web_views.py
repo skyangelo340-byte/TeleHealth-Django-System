@@ -59,10 +59,12 @@ logger = logging.getLogger(__name__)
 
 
 def _dashboard_name(user):
+    if user.is_superuser:
+        return "admin_dashboard"
     if Patient.objects.filter(user=user).exists():
         return "patient_dashboard"
     profile = StaffProfile.objects.filter(user=user, status="Active").first()
-    if user.is_superuser or (profile and profile.role == "Admin"):
+    if profile and profile.role == "Admin":
         return "admin_dashboard"
     if profile:
         return "specialist_dashboard"
@@ -138,8 +140,6 @@ def _audit(request, action, model, object_id="", details=""):
 
 def login_view(request):
     if request.user.is_authenticated:
-        if request.user.is_superuser:
-            return redirect("/admin/")
         return redirect(_dashboard_name(request.user))
 
     if request.method == "POST":
@@ -157,13 +157,6 @@ def login_view(request):
         )
 
         if user:
-            if user.is_superuser:
-                messages.info(
-                    request,
-                    "Administrator accounts must sign in through the Admin Portal."
-                )
-                return redirect("/admin/")
-
             login(request, user)
             _audit(request, "LOGIN", "User", user.pk, "Successful web login")
 
