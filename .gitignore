@@ -21,3 +21,9 @@ Thumbs.db
 .vscode/
 .idea/
 .vercel
+.env*
+
+# Local development / test data
+MOCK_DATA.csv
+core/management/commands/import_patients.py
+kill_test_db_session.py

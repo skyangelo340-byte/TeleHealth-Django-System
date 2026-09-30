@@ -15,7 +15,7 @@ class Command(BaseCommand):
         count = 0
         for reminder_id in reminder_ids:
             with transaction.atomic():
-                reminder = FollowUpReminder.objects.select_for_update().select_related("patient", "notification").get(pk=reminder_id)
+                reminder = FollowUpReminder.objects.select_for_update(of=("self",)).select_related("patient", "notification").get(pk=reminder_id)
                 notification = reminder.notification
                 if notification is None:
                     notification = send_sms_notification(reminder.patient, "Follow-up reminder", reminder.message)
