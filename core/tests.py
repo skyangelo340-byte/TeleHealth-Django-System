@@ -9,7 +9,35 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .models import Appointment, ConsultationRecord, FollowUpReminder, Notification, Patient, StaffNotification, StaffProfile
+from .ml_triage import ai_triage_recommendation, extract_emergency_flags, extract_symptoms
 
+
+
+
+class MLTriageTests(TestCase):
+    def test_natural_language_dermatology(self):
+        text = "For the past three days my skin has been very itchy and I noticed red patches on my arms."
+        result = ai_triage_recommendation({"symptoms": text})
+        self.assertEqual(result["specialty"], "Dermatology")
+        self.assertIn("itchy skin", result["extracted_symptoms"])
+        self.assertIn("red patches", result["extracted_symptoms"])
+
+    def test_natural_language_dental(self):
+        text = "My tooth has been hurting since yesterday and my gums are swollen."
+        result = ai_triage_recommendation({"symptoms": text})
+        self.assertEqual(result["specialty"], "Dental")
+        self.assertIn("tooth pain", result["extracted_symptoms"])
+
+    def test_natural_language_ophthalmology(self):
+        text = "I cannot see clearly and my eyes are irritated."
+        result = ai_triage_recommendation({"symptoms": text})
+        self.assertEqual(result["specialty"], "Ophthalmology")
+        self.assertIn("blurred vision", result["extracted_symptoms"])
+
+    def test_emergency_phrases_are_detected_separately(self):
+        flags = extract_emergency_flags("I suddenly have chest pain and I can't breathe.")
+        self.assertTrue(flags["chest pain"])
+        self.assertTrue(flags["difficulty breathing"])
 
 class TeleHealthAPITests(TestCase):
     def setUp(self):
@@ -73,6 +101,21 @@ class TeleHealthAPITests(TestCase):
         )
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()["triage"]["priority"], "High")
+
+    def test_natural_language_symptom_assessment(self):
+        self.client.login(username="patient@test.local", password="StrongPass123!")
+        response = self.client.post(
+            "/api/triage/",
+            data=json.dumps({
+                "symptoms": [
+                    "For the past three days my skin has been very itchy and I noticed red patches on my arms."
+                ]
+            }),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        triage = response.json()["triage"]
+        self.assertEqual(triage["predicted_specialty"], "Dermatology")
 
     def test_anonymous_users_cannot_read_health_data_collections(self):
         for path in ["/api/patients/", "/api/appointments/", "/api/triage/", "/api/users/", "/api/dashboard/"]:

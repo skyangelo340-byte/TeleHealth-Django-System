@@ -11,7 +11,7 @@ from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
-from .ml_triage import ai_triage_recommendation
+from .ml_triage import ai_triage_recommendation, extract_emergency_flags, extract_symptoms
 
 from .models import (
     Patient, StaffProfile, Appointment, TriageCase, ConsultationRecord,
@@ -450,48 +450,43 @@ def api_appointment_detail(request, appointment_id):
 
 def _triage_recommendation(data):
     """
-    AI-assisted clinical triage.
+    NLP-enhanced AI-assisted clinical triage.
 
-    Emergency/high-risk conditions remain protected by deterministic
-    safety rules. The ML model provides the specialty suggestion
-    and confidence score.
+    Natural-language symptom descriptions are normalized before the
+    Naive Bayes model is used. Emergency/high-risk conditions remain
+    protected by deterministic safety rules.
 
     This is a preliminary recommendation, not a medical diagnosis.
     """
 
-    symptoms = [
-        str(s).strip()
-        for s in data.get("symptoms", [])
-        if str(s).strip()
-    ]
+    symptoms = data.get("symptoms", [])
+    if isinstance(symptoms, str):
+        raw_text = symptoms.strip()
+    else:
+        raw_text = " ".join(
+            str(s).strip()
+            for s in symptoms
+            if str(s).strip()
+        )
 
-    lowered = " ".join(symptoms).lower()
+    lowered = raw_text.lower()
+    emergency_flags = extract_emergency_flags(raw_text)
 
     chest_pain = (
         bool(data.get("chest_pain"))
-        or "chest pain" in lowered
+        or emergency_flags["chest pain"]
     )
-
     breathing = (
         bool(data.get("difficulty_breathing"))
-        or any(
-            phrase in lowered
-            for phrase in [
-                "difficulty breathing",
-                "shortness of breath",
-                "dyspnea",
-            ]
-        )
+        or emergency_flags["difficulty breathing"]
     )
-
     severe_bleeding = (
         bool(data.get("severe_bleeding"))
-        or "severe bleeding" in lowered
+        or emergency_flags["severe bleeding"]
     )
-
     unconscious = (
         bool(data.get("unconscious"))
-        or "unconscious" in lowered
+        or emergency_flags["unconscious"]
     )
 
     try:
@@ -516,14 +511,22 @@ def _triage_recommendation(data):
             "Urgent same-day clinical assessment is recommended.",
         )
 
-    # AI/ML specialty prediction.
-    ai_result = ai_triage_recommendation(data)
+    # AI/ML specialty prediction. The model now accepts natural language.
+    ai_result = ai_triage_recommendation({
+        **data,
+        "symptoms": raw_text,
+    })
 
     specialty = ai_result["specialty"]
     confidence = ai_result["confidence"]
 
+    normalized_text = " ".join(
+        ai_result.get("extracted_symptoms", [])
+    )
+    priority_text = f"{lowered} {normalized_text}".strip()
+
     if fever >= 38.0 or any(
-        phrase in lowered
+        phrase in priority_text
         for phrase in [
             "persistent vomiting",
             "severe headache",
@@ -579,22 +582,37 @@ def api_triage(request):
         patient = _object_for_id(Patient, data["patient_id"])
     if not patient:
         return _error("A patient profile is required.", status=400)
-    symptoms = data.get("symptoms", [])
-    if not isinstance(symptoms, list) or not all(isinstance(value, str) for value in symptoms):
-        return _error("Symptoms must be a list of text values.")
+    symptoms = data.get("symptoms", "")
+    if isinstance(symptoms, list):
+        if not all(isinstance(value, str) for value in symptoms):
+            return _error("Symptoms must be text values.")
+        raw_symptoms = " ".join(value.strip() for value in symptoms if value.strip())
+    elif isinstance(symptoms, str):
+        raw_symptoms = symptoms.strip()
+    else:
+        return _error("Symptoms must be text.")
     form = SymptomAssessmentForm({
-        "symptoms": ", ".join(symptoms), "temperature": data.get("temperature", ""),
+        "symptoms": raw_symptoms, "temperature": data.get("temperature", ""),
         "chest_pain": data.get("chest_pain", False), "difficulty_breathing": data.get("difficulty_breathing", False),
         "severe_bleeding": data.get("severe_bleeding", False), "unconscious": data.get("unconscious", False),
     })
     if not form.is_valid():
         return _form_error(form)
     assessment = form.cleaned_data
-    assessment["symptoms"] = [value.strip() for value in assessment["symptoms"].split(",") if value.strip()]
+    assessment["symptoms"] = raw_symptoms
     priority, specialty, confidence, recommendation = _triage_recommendation(assessment)
+    extracted_symptoms = extract_symptoms(raw_symptoms)
+    stored_symptoms = extracted_symptoms or [raw_symptoms]
+    questionnaire = {
+        key: str(value)
+        for key, value in assessment.items()
+    }
+    questionnaire["raw_symptoms"] = raw_symptoms
+    questionnaire["extracted_symptoms"] = stored_symptoms
+    questionnaire["model_version"] = "NLP-NB-2.0 + safety rules"
     with transaction.atomic():
         triage = TriageCase.objects.create(
-            patient=patient, symptoms=assessment["symptoms"], questionnaire={key: str(value) for key, value in assessment.items()},
+            patient=patient, symptoms=stored_symptoms, questionnaire=questionnaire,
             predicted_specialty=specialty, confidence=confidence, priority=priority,
             recommendation=recommendation, created_at=timezone.now(),
         )

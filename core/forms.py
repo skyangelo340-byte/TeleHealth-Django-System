@@ -183,8 +183,8 @@ class StaffAppointmentForm(AppointmentForm):
 
 class SymptomAssessmentForm(StyledFormMixin, forms.Form):
     symptoms = forms.CharField(
-        help_text="Separate multiple symptoms with commas.",
-        widget=forms.Textarea(attrs={"rows": 4, "placeholder": "Example: fever, cough, headache"}),
+        help_text="Describe your symptoms in your own words. Include when they started and what you are feeling.",
+        widget=forms.Textarea(attrs={"rows": 5, "placeholder": "Example: I have had a fever and cough since yesterday. My head also hurts."}),
     )
     temperature = forms.DecimalField(required=False, min_value=30, max_value=45, decimal_places=1)
     chest_pain = forms.BooleanField(required=False)

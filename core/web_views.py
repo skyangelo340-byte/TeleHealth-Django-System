@@ -42,6 +42,7 @@ from .models import (
 )
 from .services import send_sms_notification, send_system_notification
 from .views import _triage_recommendation
+from .ml_triage import extract_symptoms
 from .workflows import (
     cancel_appointment_workflow,
     acknowledge_appointment,
@@ -411,28 +412,55 @@ def submit_assessment(request):
     form = SymptomAssessmentForm(request.POST)
     if form.is_valid():
         data = form.cleaned_data
-        data["symptoms"] = [value.strip() for value in data["symptoms"].split(",") if value.strip()]
+        raw_symptoms = data["symptoms"].strip()
+        data["symptoms"] = raw_symptoms
+
         priority, specialty, confidence, recommendation = _triage_recommendation(data)
+
+        extracted_symptoms = extract_symptoms(raw_symptoms)
+        stored_symptoms = extracted_symptoms or [raw_symptoms]
+
+        questionnaire = {
+            key: str(value)
+            for key, value in data.items()
+        }
+        questionnaire["raw_symptoms"] = raw_symptoms
+        questionnaire["extracted_symptoms"] = stored_symptoms
+        questionnaire["model_version"] = "NLP-NB-2.0 + safety rules"
+
         with transaction.atomic():
             case = TriageCase.objects.create(
-                patient=patient, symptoms=data["symptoms"], questionnaire={k: str(v) for k, v in data.items()},
-                predicted_specialty=specialty, confidence=confidence, priority=priority,
-                recommendation=recommendation, created_at=timezone.now(),
+                patient=patient,
+                symptoms=stored_symptoms,
+                questionnaire=questionnaire,
+                predicted_specialty=specialty,
+                confidence=confidence,
+                priority=priority,
+                recommendation=recommendation,
+                created_at=timezone.now(),
             )
             Notification.objects.create(
-                patient=patient, channel="System", title="Symptom assessment completed",
-                message=f"Preliminary triage: {priority} priority. {recommendation}", status="Sent", sent_at=timezone.now(),
+                patient=patient,
+                channel="System",
+                title="Symptom assessment completed",
+                message=f"Preliminary triage: {priority} priority. {recommendation}",
+                status="Sent",
+                sent_at=timezone.now(),
             )
+
         _audit(request, "CREATE", "TriageCase", case.pk, "Patient submitted symptom assessment")
         messages.success(request, f"{priority} priority: {recommendation} This is not a medical diagnosis.")
     else:
         messages.error(request, "Please correct the symptom questionnaire.")
-        return render(request, "portal/index.html", _portal_context(request, patient, active_tab="triage", triage_form=form), status=400)
+        return render(
+            request,
+            "portal/index.html",
+            _portal_context(request, patient, active_tab="triage", triage_form=form),
+            status=400,
+        )
     return redirect("patient_portal_tab", tab="triage")
 
 
-@login_required(login_url="login")
-@require_POST
 def read_notification(request, pk):
     patient = _active_patient(request)
     notification = get_object_or_404(Notification, pk=pk, patient=patient)
