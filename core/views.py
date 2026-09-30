@@ -11,6 +11,7 @@ from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
+from .ml_triage import ai_triage_recommendation
 
 from .models import (
     Patient, StaffProfile, Appointment, TriageCase, ConsultationRecord,
@@ -448,27 +449,105 @@ def api_appointment_detail(request, appointment_id):
 
 
 def _triage_recommendation(data):
-    symptoms = [str(s).strip() for s in data.get("symptoms", []) if str(s).strip()]
+    """
+    AI-assisted clinical triage.
+
+    Emergency/high-risk conditions remain protected by deterministic
+    safety rules. The ML model provides the specialty suggestion
+    and confidence score.
+
+    This is a preliminary recommendation, not a medical diagnosis.
+    """
+
+    symptoms = [
+        str(s).strip()
+        for s in data.get("symptoms", [])
+        if str(s).strip()
+    ]
+
     lowered = " ".join(symptoms).lower()
-    chest_pain = bool(data.get("chest_pain")) or "chest pain" in lowered
-    breathing = bool(data.get("difficulty_breathing")) or any(x in lowered for x in ["difficulty breathing", "shortness of breath", "dyspnea"])
-    severe_bleeding = bool(data.get("severe_bleeding")) or "severe bleeding" in lowered
-    unconscious = bool(data.get("unconscious")) or "unconscious" in lowered
+
+    chest_pain = (
+        bool(data.get("chest_pain"))
+        or "chest pain" in lowered
+    )
+
+    breathing = (
+        bool(data.get("difficulty_breathing"))
+        or any(
+            phrase in lowered
+            for phrase in [
+                "difficulty breathing",
+                "shortness of breath",
+                "dyspnea",
+            ]
+        )
+    )
+
+    severe_bleeding = (
+        bool(data.get("severe_bleeding"))
+        or "severe bleeding" in lowered
+    )
+
+    unconscious = (
+        bool(data.get("unconscious"))
+        or "unconscious" in lowered
+    )
+
     try:
         fever = float(data.get("temperature") or 0)
     except (TypeError, ValueError):
         fever = 0
 
+    # Safety rules always take priority over the ML model.
     if unconscious or severe_bleeding or (chest_pain and breathing):
-        return "High", "Emergency", Decimal("94.00"), "Seek immediate emergency assessment at the Barangay Health Center or nearest emergency facility."
-    if chest_pain or breathing or fever >= 39.0:
-        return "High", "General Medicine", Decimal("87.00"), "Urgent same-day clinical assessment is recommended."
-    if fever >= 38.0 or any(x in lowered for x in ["persistent vomiting", "severe headache", "dizziness"]):
-        return "Medium", "General Medicine", Decimal("79.00"), "Schedule a consultation soon and monitor symptoms closely."
-    if any(x in lowered for x in ["rash", "skin", "itch"]):
-        return "Low", "Dermatology", Decimal("76.00"), "A routine consultation is appropriate unless symptoms worsen."
-    return "Low", "General Medicine", Decimal("72.00"), "A routine online consultation is appropriate. Seek urgent care if severe symptoms develop."
+        return (
+            "High",
+            "Emergency",
+            Decimal("99.00"),
+            "Seek immediate emergency assessment at the Barangay Health Center or nearest emergency facility.",
+        )
 
+    if chest_pain or breathing or fever >= 39.0:
+        return (
+            "High",
+            "General Medicine",
+            Decimal("99.00"),
+            "Urgent same-day clinical assessment is recommended.",
+        )
+
+    # AI/ML specialty prediction.
+    ai_result = ai_triage_recommendation(data)
+
+    specialty = ai_result["specialty"]
+    confidence = ai_result["confidence"]
+
+    if fever >= 38.0 or any(
+        phrase in lowered
+        for phrase in [
+            "persistent vomiting",
+            "severe headache",
+            "dizziness",
+        ]
+    ):
+        priority = "Medium"
+        recommendation = (
+            f"AI-assisted suggestion: {specialty}. "
+            "Schedule a consultation soon and monitor symptoms closely."
+        )
+    else:
+        priority = "Low"
+        recommendation = (
+            f"AI-assisted suggestion: {specialty}. "
+            "A routine consultation is appropriate unless symptoms worsen."
+        )
+
+    return (
+        priority,
+        specialty,
+        confidence,
+        recommendation,
+    )
 
 @require_http_methods(["GET", "POST"])
 def api_triage(request):
