@@ -1,4 +1,4 @@
-"""Gemini API integration for AI-assisted symptom triage.
+﻿"""Gemini API integration for AI-assisted symptom triage.
 
 This module is a decision-support component for an academic/demo TeleHealth
 system. It does not diagnose patients. Emergency handling remains deterministic
@@ -14,14 +14,13 @@ from google import genai
 from google.genai import types
 
 
-MODEL_VERSION = os.environ.get("GEMINI_MODEL", "gemini-3.7-flash")
+MODEL_VERSION = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite")
 
 # Fallback models used only when the selected model is temporarily unavailable.
 FALLBACK_MODELS = (
     MODEL_VERSION,
-    "gemini-3.6-flash",
-    "gemini-3.5-flash",
     "gemini-flash-lite-latest",
+    "gemini-3.5-flash-lite",
 )
 
 SPECIALTIES = (
@@ -53,9 +52,6 @@ RESULT_SCHEMA = {
         "extracted_symptoms": {
             "type": "array",
             "items": {"type": "string"},
-    "temporary_self_care": {"type": "string"},
-    "if_care_delayed": {"type": "string"},
-    "urgent_warning_signs": {"type": "array", "items": {"type": "string"}},
             "description": (
                 "Short symptom phrases explicitly supported "
                 "by the patient's text."
@@ -66,6 +62,64 @@ RESULT_SCHEMA = {
         "specialty",
         "confidence",
         "extracted_symptoms",
+    ],
+}
+
+
+CONVERSATIONAL_RESULT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "status": {
+            "type": "string",
+            "enum": ["needs_follow_up", "complete"],
+            "description": "Whether another important follow-up question is needed."
+        },
+        "language": {
+            "type": "string",
+            "description": "Detected language of the patient's latest/current conversation."
+        },
+        "follow_up_question": {
+            "type": "string",
+            "description": "One concise, relevant question in the patient's language. Empty when complete."
+        },
+        "specialty": {
+            "type": "string",
+            "enum": list(SPECIALTIES),
+            "description": "Best-fit specialty based only on information provided so far."
+        },
+        "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Model-reported confidence. Not clinically calibrated."
+        },
+        "extracted_symptoms": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Short symptom/concern phrases supported by the conversation."
+        },
+        "recommendation": {
+            "type": "string",
+            "description": "A concise preliminary recommendation in the patient's language. Empty when follow-up is needed."
+        },
+        "temporary_self_care": {
+            "type": "string",
+            "description": "Low-risk general self-care guidance that may provide temporary comfort while awaiting appropriate care. Empty when follow-up is needed."
+        },
+        "if_care_delayed": {
+            "type": "string",
+            "description": "Uncertainty-aware explanation of what could happen if appropriate assessment is delayed. Do not state definite outcomes. Empty when follow-up is needed."
+        },
+        "urgent_warning_signs": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Relevant warning signs that should prompt urgent professional medical attention. Empty when none are relevant or when follow-up is needed."
+        },
+    },
+    "required": [
+        "status", "language", "follow_up_question", "specialty",
+        "confidence", "extracted_symptoms", "recommendation",
+        "temporary_self_care", "if_care_delayed", "urgent_warning_signs",
     ],
 }
 
@@ -168,17 +222,6 @@ def _generate_with_fallback(client, prompt):
     ) from last_error
 
 
-
-def _normalize_guidance(result):
-    """Keep optional care-guidance fields safe and compatible with older responses."""
-    result.setdefault("temporary_self_care", "")
-    result.setdefault("if_care_delayed", "")
-    result.setdefault("urgent_warning_signs", [])
-    if not isinstance(result["urgent_warning_signs"], list):
-        result["urgent_warning_signs"] = []
-    return result
-
-
 def gemini_triage_recommendation(data):
     """Classify a natural-language symptom description with Gemini.
 
@@ -250,7 +293,6 @@ Return only the requested structured result.
         client.close()
 
     result = _parse_result(response)
-                result = _normalize_guidance(result)
 
     specialty = str(
         result.get("specialty", "")
@@ -300,7 +342,149 @@ Return only the requested structured result.
         "extracted_symptoms": extracted,
     }
 
-- If status is complete, provide concise, low-risk temporary self-care guidance appropriate to the reported concern. Do not diagnose, prescribe prescription medicines, give medication doses, or suggest risky procedures.
-- If status is complete, explain in plain language what could happen if professional assessment is delayed. Use uncertainty-aware wording such as "may" or "could"; do not claim a definite outcome.
-- Provide urgent warning signs only when relevant. If there are emergency warning signs, prioritize urgent professional/emergency assessment and do not present self-care as a substitute.
-- Keep recommendations and guidance in the patient's detected language when practical.
+def gemini_conversational_triage(data):
+    """Analyze a multi-turn symptom conversation and ask for missing key details.
+
+    This is decision support only. It does not diagnose, prescribe treatment,
+    or replace the deterministic emergency rules in the Django application.
+    """
+    conversation = data.get("conversation") or []
+    if not isinstance(conversation, list) or not conversation:
+        raise GeminiTriageError("A symptom conversation is required for Gemini triage.")
+
+    lines = []
+    for item in conversation[-8:]:
+        if not isinstance(item, dict):
+            continue
+        role = "Patient" if item.get("role") == "patient" else "Assistant"
+        text = str(item.get("text", "")).strip()
+        if text:
+            lines.append(f"{role}: {text}")
+
+    if not lines:
+        raise GeminiTriageError("The symptom conversation is empty.")
+
+    temperature = data.get("temperature")
+    temperature_text = str(temperature).strip() if temperature not in (None, "") else "Not provided"
+
+    prompt = f"""
+You are an AI-assisted conversational triage component in a school/demo TeleHealth system.
+You are NOT a doctor. Do not diagnose a disease, claim that an injury is confirmed, or prescribe treatment.
+Your job is to collect enough relevant information for a preliminary specialty recommendation.
+
+Rules:
+1. Detect the patient's language and write the follow-up question and final recommendation in that language when practical.
+2. Read the entire conversation, not only the latest message.
+3. If important information is missing, return status=needs_follow_up and ask EXACTLY ONE concise question.
+4. Ask the most useful missing detail first, such as body location, onset/duration, severity, pain level, associated symptoms, or context/cause of an injury.
+5. Do not ask for information that is already clearly provided.
+6. If enough information is available, return status=complete.
+7. Never invent symptoms or facts. Extract only information supported by the conversation.
+8. Choose exactly one specialty from: General Medicine, Dermatology, Dental, Ophthalmology, Pediatrics, Obstetrics.
+9. For an incomplete statement such as "broken bones", do NOT claim a fracture is confirmed. Ask for the body part and relevant context first.
+10. Keep questions simple and understandable.
+11. The recommendation must be a preliminary healthcare-assessment suggestion, not a diagnosis.
+12. If status=needs_follow_up, recommendation must be an empty string.
+13. If status=needs_follow_up, temporary_self_care, if_care_delayed, and urgent_warning_signs must be empty.
+14. If status=complete, provide only low-risk general temporary self-care guidance when appropriate. Do not prescribe medication, provide medication dosage, or recommend risky procedures.
+15. If status=complete, explain possible consequences of delaying appropriate assessment using cautious words such as "may" or "could". Never claim that a specific complication will definitely happen.
+16. If status=complete, provide only relevant urgent warning signs. Do not invent warning signs that are unrelated to the patient's reported concern.
+17. If urgent warning signs are relevant, clearly recommend seeking urgent professional medical care. Do not tell the patient to manage a potentially urgent condition at home.
+18. Keep all guidance concise, practical, non-alarming, and in the patient's detected language when practical.
+
+Patient temperature, if provided: {temperature_text}
+
+Conversation:
+{chr(10).join(lines)}
+
+Return only the requested structured result.
+""".strip()
+
+    client = _client()
+    try:
+        last_error = None
+        for model in FALLBACK_MODELS:
+            try:
+                response = client.models.generate_content(
+                    model=model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0,
+                        response_mime_type="application/json",
+                        response_schema=CONVERSATIONAL_RESULT_SCHEMA,
+                    ),
+                )
+                result = _parse_result(response)
+                used_model = model
+                last_error = None
+                break
+            except Exception as exc:
+                last_error = exc
+                if not _is_temporary_error(exc):
+                    raise GeminiTriageError(
+                        "Gemini conversational triage request failed."
+                    ) from exc
+        if last_error is not None:
+            raise GeminiTriageError(
+                "Gemini is temporarily unavailable. Please try the assessment again later."
+            ) from last_error
+    finally:
+        client.close()
+
+    status = str(result.get("status", "")).strip()
+    if status not in {"needs_follow_up", "complete"}:
+        raise GeminiTriageError("Gemini returned an invalid conversation status.")
+
+    specialty = str(result.get("specialty", "")).strip()
+    if specialty not in SPECIALTIES:
+        raise GeminiTriageError("Gemini returned an unsupported specialty.")
+
+    try:
+        confidence_value = float(result.get("confidence"))
+    except (TypeError, ValueError) as exc:
+        raise GeminiTriageError("Gemini returned an invalid confidence value.") from exc
+
+    extracted = result.get("extracted_symptoms", [])
+    if not isinstance(extracted, list):
+        raise GeminiTriageError("Gemini returned invalid extracted symptoms.")
+
+    extracted = [str(item).strip() for item in extracted if str(item).strip()][:10]
+    follow_up = str(result.get("follow_up_question", "")).strip()
+    recommendation = str(result.get("recommendation", "")).strip()
+    temporary_self_care = str(result.get("temporary_self_care", "")).strip()
+    if_care_delayed = str(result.get("if_care_delayed", "")).strip()
+
+    urgent_warning_signs = result.get("urgent_warning_signs", [])
+    if not isinstance(urgent_warning_signs, list):
+        raise GeminiTriageError("Gemini returned invalid urgent warning signs.")
+
+    urgent_warning_signs = [
+        str(item).strip()
+        for item in urgent_warning_signs
+        if str(item).strip()
+    ][:8]
+
+    if status == "needs_follow_up" and not follow_up:
+        raise GeminiTriageError("Gemini requested follow-up but did not provide a question.")
+    if status == "complete" and not recommendation:
+        raise GeminiTriageError("Gemini completed the assessment without a recommendation.")
+
+    if status == "needs_follow_up":
+        temporary_self_care = ""
+        if_care_delayed = ""
+        urgent_warning_signs = []
+
+    return {
+        "status": status,
+        "language": str(result.get("language", "English")).strip() or "English",
+        "follow_up_question": follow_up,
+        "specialty": specialty,
+        "confidence": Decimal(f"{max(0.0, min(100.0, confidence_value)):.2f}"),
+        "extracted_symptoms": extracted,
+        "recommendation": recommendation,
+        "temporary_self_care": temporary_self_care,
+        "if_care_delayed": if_care_delayed,
+        "urgent_warning_signs": urgent_warning_signs,
+        "model": used_model,
+    }
+

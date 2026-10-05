@@ -33,3 +33,7 @@ kill_test_db_session.py
 *.speed-backup
 *.gemini-backup
 *.route-backup
+
+*.before-*
+*.chat-backup
+*.guidance-backup
