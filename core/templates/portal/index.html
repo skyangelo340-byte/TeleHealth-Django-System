@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block title %}Patient Portal | TeleHealth RHU{% endblock %}
 {% block content %}
 <section class="care-hero patient-hero">
@@ -35,11 +35,68 @@
   </section>
 
   <section data-panel="triage" {% if active_tab != 'triage' %}hidden{% endif %}>
-    <div class="section-heading"><span class="module-tag">SYMPTOM CHECK</span><h2>Preliminary symptom assessment</h2><p>This helps staff prioritize care. It does not provide a medical diagnosis.</p></div>
-    <div class="two-column"><div class="card form-card"><form method="post" action="{% url 'submit_assessment' %}">{% csrf_token %}{% include "includes/form_errors.html" %}{% for field in triage_form %}{% include "includes/field.html" %}{% endfor %}<button class="button button-primary" data-submit-label="Assessing...">Get recommendation</button></form></div><aside class="card warning-panel"><b>Emergency warning signs</b><p>For severe bleeding, loss of consciousness, chest pain with breathing difficulty, or another emergency, seek immediate care at the nearest emergency facility. Do not wait for an online response.</p></aside></div>
-  </section>
+  <div class="section-heading">
+    <span class="module-tag">SYMPTOM CHECK</span>
+    <h2>Preliminary symptom assessment</h2>
+    <p>This helps staff prioritize care. It does not provide a medical diagnosis.</p>
+  </div>
 
-  <section data-panel="appointments" {% if active_tab != 'appointments' %}hidden{% endif %}>
+  <div class="card triage-chat-card">
+
+    <div class="triage-chat-header">
+      <div>
+        <span class="module-tag">SYMPTOM ASSISTANT</span>
+        <h3>Tell us what you're experiencing</h3>
+        <p>
+          Describe your symptoms naturally. You can chat with the assistant
+          and answer its follow-up questions.
+        </p>
+      </div>
+    </div>
+
+    <div
+      class="triage-chat-messages"
+      data-chat-messages
+      aria-live="polite"
+    >
+      <div class="chat-row chat-row-ai">
+        <div class="chat-bubble chat-bubble-ai">
+          <span class="chat-bubble-label">Assistant</span>
+          <p>
+            Hello! Tell me what you're experiencing.
+            You can include when it started and anything else you noticed.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <form class="triage-chat-form" data-triage-chat-form>
+      {% csrf_token %}
+
+      <textarea
+        name="symptoms"
+        rows="1"
+        autocomplete="off"
+        placeholder="Type your message..."
+        aria-label="Message"
+      ></textarea>
+
+      <button
+        type="submit"
+        class="button button-primary triage-submit"
+      >
+        Send
+      </button>
+    </form>
+
+    <p class="chat-hint">
+      Press Enter to send • Shift + Enter for a new line
+    </p>
+
+  </div>
+</section>
+
+<section data-panel="appointments" {% if active_tab != 'appointments' %}hidden{% endif %}> {% if active_tab != 'appointments' %}hidden{% endif %}>
     <div class="section-heading"><span class="module-tag">APPOINTMENTS</span><h2>Requests and scheduled care</h2><p>Track pending, approved, scheduled, completed, cancelled, and no-show appointments.</p></div>
     <form class="filter-bar" method="get" action="{% url 'patient_portal_tab' 'appointments' %}"><label class="sr-only" for="portal-search">Search appointments</label><input class="form-control" id="portal-search" name="q" value="{{ search }}" placeholder="Search department, provider, or reason"><label class="sr-only" for="portal-status">Appointment status</label><select class="form-control" id="portal-status" name="status"><option value="">All statuses</option><option {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option><option {% if status_filter == 'Approved' %}selected{% endif %}>Approved</option><option {% if status_filter == 'Scheduled' %}selected{% endif %}>Scheduled</option><option {% if status_filter == 'Rescheduled' %}selected{% endif %}>Rescheduled</option><option {% if status_filter == 'Completed' %}selected{% endif %}>Completed</option><option {% if status_filter == 'Cancelled' %}selected{% endif %}>Cancelled</option><option {% if status_filter == 'No-show' %}selected{% endif %}>No-show</option></select><button class="button button-secondary">Filter</button>{% if search or status_filter %}<a class="button button-secondary" href="{% url 'patient_portal_tab' 'appointments' %}">Clear</a>{% endif %}</form>
     <section class="card table-card"><table><caption class="sr-only">Your appointments</caption><thead><tr><th scope="col">Date</th><th scope="col">Service</th><th scope="col">Type</th><th scope="col">Provider</th><th scope="col">Status</th><th scope="col">Action</th></tr></thead><tbody>{% for item in appointments %}<tr><td><b>{{ item.appointment_date }}</b><small>{{ item.appointment_time|time:'H:i' }}</small></td><td>{{ item.department }}<small>{{ item.reason|default:'No reason recorded' }}</small></td><td>{{ item.consultation_type }}</td><td>{{ item.provider_name }}</td><td><span class="badge">{{ item.status }}</span></td><td>{% if item.status != 'Completed' and item.status != 'Cancelled' and item.status != 'No-show' %}<form method="post" action="{% url 'cancel_appointment' item.pk %}" data-confirm="Cancel this appointment request?">{% csrf_token %}<button class="button button-small button-danger">Cancel</button></form>{% else %}<span class="muted">No action</span>{% endif %}</td></tr>{% empty %}<tr><td colspan="6" class="empty">No matching appointments. {% if search or status_filter %}<a href="{% url 'patient_portal_tab' 'appointments' %}">Clear filters</a>{% else %}<a href="{% url 'patient_portal_tab' 'schedule' %}">Request your first appointment</a>{% endif %}</td></tr>{% endfor %}</tbody></table></section>
@@ -55,4 +112,735 @@
     <div class="stack">{% for item in notifications %}<article class="card notice {% if not item.is_read %}notice-unread{% endif %}"><div><div class="card-head"><h2>{{ item.title }}</h2><span class="badge">{{ item.channel }}</span></div><p>{{ item.message }}</p><small>{{ item.created_at|date:'M j, Y H:i' }} - {{ item.status }}</small></div>{% if not item.is_read %}<form method="post" action="{% url 'read_notification' item.pk %}">{% csrf_token %}<button class="button button-small">Mark read</button></form>{% endif %}</article>{% empty %}<p class="empty">No notifications yet.</p>{% endfor %}</div>
   </section>
 </div>
+<style>
+.triage-chat-card {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.triage-chat-header {
+  padding: 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.triage-chat-header h3 {
+  margin: 8px 0 6px;
+}
+
+.triage-chat-header p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.triage-chat-messages {
+  width: 100%;
+  min-height: 480px;
+  max-height: 620px;
+  overflow-y: auto;
+  padding: 24px;
+  background: #f7f8fc;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  scroll-behavior: smooth;
+}
+
+.chat-row {
+  display: flex;
+  width: 100%;
+}
+
+.chat-row-ai {
+  justify-content: flex-start;
+}
+
+.chat-row-user {
+  justify-content: flex-end;
+}
+
+.chat-bubble {
+  max-width: 78%;
+  padding: 13px 16px;
+  border-radius: 18px;
+  line-height: 1.5;
+}
+
+.chat-bubble p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.chat-bubble-ai {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #172033;
+  border-bottom-left-radius: 5px;
+}
+
+.chat-bubble-user {
+  background: #4338ca !important;
+  color: #ffffff !important;
+  border-bottom-right-radius: 5px;
+}
+
+.chat-bubble-user p,
+.chat-bubble-user .chat-bubble-label {
+  color: #ffffff !important;
+}
+
+.chat-bubble-user .chat-bubble-label {
+  opacity: .9;
+}
+
+.chat-bubble-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  opacity: .65;
+}
+
+.chat-bubble-user .chat-bubble-label {
+  opacity: .8;
+}
+
+.triage-chat-form {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  padding: 16px;
+  border-top: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.triage-chat-form textarea {
+  flex: 1;
+  min-height: 48px;
+  max-height: 140px;
+  resize: none;
+  border: 1px solid #d1d5db;
+  border-radius: 14px;
+  padding: 13px 15px;
+  font: inherit;
+  outline: none;
+}
+
+.triage-chat-form textarea:focus {
+  border-color: #4338ca;
+  box-shadow: 0 0 0 3px rgba(67, 56, 202, .10);
+}
+
+.triage-chat-form .button {
+  min-height: 48px;
+  white-space: nowrap;
+}
+
+.chat-hint {
+  margin: 0;
+  padding: 0 16px 14px;
+  color: #6b7280;
+  font-size: 12px;
+  background: #ffffff;
+}
+
+.chat-thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.chat-thinking span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .45;
+  animation: chatDot 1.2s infinite;
+}
+
+.chat-thinking span:nth-child(2) {
+  animation-delay: .15s;
+}
+
+.chat-thinking span:nth-child(3) {
+  animation-delay: .3s;
+}
+
+@keyframes chatDot {
+  0%, 60%, 100% {
+    transform: translateY(0);
+  }
+
+  30% {
+    transform: translateY(-4px);
+  }
+}
+
+.chat-result-card {
+  margin-top: 10px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.chat-result-card h4 {
+  margin: 0 0 8px;
+}
+
+.chat-result-card p {
+  margin: 8px 0;
+}
+
+.chat-specialty {
+  font-weight: 700;
+}
+
+.chat-warning {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.chat-warning ul {
+  margin-bottom: 0;
+}
+
+@media (max-width: 700px) {
+  .triage-chat-messages {
+    min-height: 360px;
+    max-height: 65vh;
+    padding: 16px;
+  }
+
+  .chat-bubble {
+    max-width: 88%;
+  }
+
+  .triage-chat-form {
+    padding: 12px;
+  }
+
+  .triage-chat-form .button {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const form = document.querySelector("[data-triage-chat-form]");
+
+  if (!form) {
+    return;
+  }
+
+  const input = form.querySelector('textarea[name="symptoms"]');
+  const messages = document.querySelector("[data-chat-messages]");
+  const button = form.querySelector(".triage-submit");
+
+  const endpoint = "{% url 'api_triage_conversation' %}";
+
+  let busy = false;
+
+  function escapeHtml(value) {
+    const div = document.createElement("div");
+    div.textContent = String(value ?? "");
+    return div.innerHTML;
+  }
+
+  function scrollToBottom() {
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function addMessage(role, text) {
+
+    const isUser = role === "user";
+
+    const row = document.createElement("div");
+
+    row.className = isUser
+      ? "chat-row chat-row-user"
+      : "chat-row chat-row-ai";
+
+    const bubble = document.createElement("div");
+
+    bubble.className = isUser
+      ? "chat-bubble chat-bubble-user"
+      : "chat-bubble chat-bubble-ai";
+
+    bubble.innerHTML = `
+      <span class="chat-bubble-label">
+        ${isUser ? "You" : "Assistant"}
+      </span>
+
+      <p>${escapeHtml(text)}</p>
+    `;
+
+    row.appendChild(bubble);
+    messages.appendChild(row);
+
+    scrollToBottom();
+  }
+
+  function addThinking() {
+
+    const row = document.createElement("div");
+
+    row.className = "chat-row chat-row-ai";
+
+    row.innerHTML = `
+      <div class="chat-bubble chat-bubble-ai">
+        <span class="chat-bubble-label">Assistant</span>
+
+        <div class="chat-thinking" aria-label="Assistant is thinking">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    `;
+
+    messages.appendChild(row);
+
+    scrollToBottom();
+
+    return row;
+  }
+
+  function addNewAssessmentButton() {
+
+    const row = document.createElement("div");
+
+    row.className = "chat-row chat-row-ai";
+
+    row.innerHTML = `
+      <div class="chat-bubble chat-bubble-ai">
+
+        <span class="chat-bubble-label">
+          Assistant
+        </span>
+
+        <p>
+          This assessment is complete. You can start a new assessment
+          whenever you're ready.
+        </p>
+
+        <button
+          type="button"
+          class="button button-primary chat-new-assessment"
+          style="margin-top: 12px;"
+        >
+          New Assessment
+        </button>
+
+      </div>
+    `;
+
+    messages.appendChild(row);
+
+    const newButton =
+      row.querySelector(".chat-new-assessment");
+
+    newButton.addEventListener("click", startNewAssessment);
+
+    scrollToBottom();
+  }
+
+  function addResult(data) {
+
+    const triage = data.triage || {};
+
+    const specialty =
+      triage.predicted_specialty ||
+      triage.specialty ||
+      data.specialty ||
+      "General Medicine";
+
+    const recommendation =
+      triage.recommendation ||
+      data.recommendation ||
+      "Please follow the guidance provided by the healthcare staff.";
+
+    const symptoms =
+      triage.symptoms ||
+      triage.extracted_symptoms ||
+      data.extracted_symptoms ||
+      [];
+
+    const selfCare =
+      data.temporary_self_care ||
+      triage.temporary_self_care ||
+      "";
+
+    const delayedCare =
+      data.if_care_delayed ||
+      triage.if_care_delayed ||
+      "";
+
+    const warnings =
+      data.urgent_warning_signs ||
+      triage.urgent_warning_signs ||
+      [];
+
+    let symptomsHtml = "";
+
+    if (Array.isArray(symptoms) && symptoms.length) {
+
+      symptomsHtml = `
+        <p>
+          <strong>Recognized symptoms:</strong>
+          ${symptoms.map(escapeHtml).join(", ")}
+        </p>
+      `;
+    }
+
+    let selfCareHtml = "";
+
+    if (selfCare) {
+
+      selfCareHtml = `
+        <p>
+          <strong>For now:</strong>
+          ${escapeHtml(selfCare)}
+        </p>
+      `;
+    }
+
+    let delayedHtml = "";
+
+    if (delayedCare) {
+
+      delayedHtml = `
+        <p>
+          <strong>If care is delayed:</strong>
+          ${escapeHtml(delayedCare)}
+        </p>
+      `;
+    }
+
+    let warningsHtml = "";
+
+    if (Array.isArray(warnings) && warnings.length) {
+
+      warningsHtml = `
+        <div class="chat-warning">
+
+          <strong>Seek urgent care if:</strong>
+
+          <ul>
+            ${warnings.map(function (item) {
+              return "<li>" + escapeHtml(item) + "</li>";
+            }).join("")}
+          </ul>
+
+        </div>
+      `;
+    }
+
+    const row = document.createElement("div");
+
+    row.className = "chat-row chat-row-ai";
+
+    row.innerHTML = `
+      <div class="chat-bubble chat-bubble-ai">
+
+        <span class="chat-bubble-label">
+          Assistant
+        </span>
+
+        <div class="chat-result-card">
+
+          <h4>Preliminary assessment</h4>
+
+          <p class="chat-specialty">
+            Recommended specialty:
+            ${escapeHtml(specialty)}
+          </p>
+
+          ${symptomsHtml}
+
+          <p>
+            <strong>Recommendation:</strong>
+            ${escapeHtml(recommendation)}
+          </p>
+
+          ${selfCareHtml}
+
+          ${delayedHtml}
+
+          ${warningsHtml}
+
+          <p class="muted">
+            This is a preliminary AI-assisted assessment,
+            not a medical diagnosis. A healthcare professional
+            should review the result.
+          </p>
+
+        </div>
+
+      </div>
+    `;
+
+    messages.appendChild(row);
+
+    scrollToBottom();
+
+    addNewAssessmentButton();
+  }
+
+  async function startNewAssessment() {
+
+    if (busy) {
+      return;
+    }
+
+    busy = true;
+
+    try {
+
+      const csrfInput =
+        form.querySelector('input[name="csrfmiddlewaretoken"]');
+
+      const csrfToken =
+        csrfInput ? csrfInput.value : "";
+
+      const response = await fetch(endpoint, {
+
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
+          "X-Requested-With": "XMLHttpRequest"
+        },
+
+        credentials: "same-origin",
+
+        body: JSON.stringify({
+          reset: true
+        })
+
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+
+        throw new Error(
+          data.error ||
+          "Unable to start a new assessment."
+        );
+      }
+
+      messages.innerHTML = `
+        <div class="chat-row chat-row-ai">
+
+          <div class="chat-bubble chat-bubble-ai">
+
+            <span class="chat-bubble-label">
+              Assistant
+            </span>
+
+            <p>
+              Hello! Tell me what you're experiencing.
+              You can include when it started and anything else you noticed.
+            </p>
+
+          </div>
+
+        </div>
+      `;
+
+      input.disabled = false;
+
+      button.disabled = false;
+
+      button.textContent = "Send";
+
+      input.value = "";
+
+      input.style.height = "48px";
+
+      input.focus();
+
+      scrollToBottom();
+
+    } catch (error) {
+
+      addMessage(
+        "assistant",
+        error.message ||
+        "Unable to start a new assessment. Please try again."
+      );
+
+    } finally {
+
+      busy = false;
+
+    }
+  }
+
+  async function sendMessage() {
+
+    if (busy) {
+      return;
+    }
+
+    const message = input.value.trim();
+
+    if (!message) {
+      return;
+    }
+
+    busy = true;
+
+    addMessage("user", message);
+
+    input.value = "";
+
+    input.style.height = "48px";
+
+    button.disabled = true;
+
+    button.textContent = "Sending...";
+
+    const thinking = addThinking();
+
+    try {
+
+      const csrfInput =
+        form.querySelector('input[name="csrfmiddlewaretoken"]');
+
+      const csrfToken =
+        csrfInput ? csrfInput.value : "";
+
+      const response = await fetch(endpoint, {
+
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
+          "X-Requested-With": "XMLHttpRequest"
+        },
+
+        credentials: "same-origin",
+
+        body: JSON.stringify({
+          message: message
+        })
+
+      });
+
+      const data = await response.json();
+
+      thinking.remove();
+
+      if (!response.ok || !data.ok) {
+
+        throw new Error(
+          data.error ||
+          "Unable to process the assessment."
+        );
+      }
+
+      if (data.status === "needs_follow_up") {
+
+        addMessage(
+          "assistant",
+          data.question ||
+          "Can you tell me a little more about your symptoms?"
+        );
+
+        input.focus();
+
+      } else if (data.status === "complete") {
+
+        addResult(data);
+
+        input.disabled = true;
+
+        button.disabled = true;
+
+        button.textContent = "New Assessment";
+      }
+
+    } catch (error) {
+
+      thinking.remove();
+
+      addMessage(
+        "assistant",
+        error.message ||
+        "Sorry, something went wrong. Please try again."
+      );
+
+    } finally {
+
+      busy = false;
+
+      if (!input.disabled) {
+
+        button.disabled = false;
+
+        button.textContent = "Send";
+      }
+
+    }
+  }
+
+  form.addEventListener("submit", function (event) {
+
+    event.preventDefault();
+
+    sendMessage();
+
+  });
+
+  input.addEventListener("keydown", function (event) {
+
+    if (event.key === "Enter" && !event.shiftKey) {
+
+      event.preventDefault();
+
+      form.requestSubmit();
+
+    }
+
+  });
+
+  input.addEventListener("input", function () {
+
+    input.style.height = "48px";
+
+    input.style.height =
+      Math.min(input.scrollHeight, 140) + "px";
+
+  });
+
+  input.focus();
+
+});
+</script>
 {% endblock %}
+
+
+
+
+
+
+
+
+
+

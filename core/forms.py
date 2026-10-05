@@ -1,4 +1,4 @@
-from django import forms
+﻿from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
@@ -121,7 +121,26 @@ class PatientForm(PatientProfileForm):
         fields = ["patient_code", *PatientProfileForm.Meta.fields]
 
 
+APPOINTMENT_DEPARTMENT_CHOICES = [
+    ("Dermatology", "Dermatology"),
+    ("Emergency", "Emergency"),
+    ("Gastroenterology", "Gastroenterology"),
+    ("General Medicine", "General Medicine"),
+    ("Internal Medicine", "Internal Medicine"),
+    ("Neurology", "Neurology"),
+    ("Orthopedics", "Orthopedics"),
+    ("Pediatrics", "Pediatrics"),
+    ("Respiratory Medicine", "Respiratory Medicine"),
+]
+
+
 class AppointmentForm(StyledFormMixin, forms.ModelForm):
+    department = forms.ChoiceField(
+        choices=APPOINTMENT_DEPARTMENT_CHOICES,
+        required=True,
+        widget=forms.Select(attrs={"class": "form-control department-select"}),
+    )
+
     class Meta:
         model = Appointment
         fields = ["appointment_date", "appointment_time", "department", "consultation_type", "reason"]
@@ -325,3 +344,6 @@ class InventoryForm(StyledFormMixin, forms.ModelForm):
         model = InventoryItem
         fields = ["name", "category", "unit", "quantity_on_hand", "reorder_level", "last_restocked"]
         widgets = {"last_restocked": forms.DateInput(attrs={"type": "date"})}
+
+
+

@@ -1,6 +1,5 @@
 from functools import wraps
 import logging
-import os
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -43,7 +42,7 @@ from .models import (
     TriageCase,
 )
 from .services import send_sms_notification, send_system_notification
-from .views import _triage_recommendation, _conversational_triage_step
+from .views import _triage_recommendation
 from .ml_triage import extract_symptoms
 from .workflows import (
     cancel_appointment_workflow,
@@ -329,7 +328,6 @@ def _portal_context(request, patient, *, active_tab="overview", profile_form=Non
         "appointment_form": appointment_form or AppointmentForm(),
         "triage_form": triage_form or SymptomAssessmentForm(),
         "assessment_result": assessment_result,
-        "triage_conversation": request.session.get("triage_conversation", []),
         "appointments": appointments,
         "all_appointment_count": patient.appointments.count(),
         "next_appointment": patient.appointments.filter(
@@ -417,97 +415,55 @@ def cancel_appointment(request, pk):
 @require_POST
 def submit_assessment(request):
     patient = _active_patient(request)
-
-    if request.POST.get("conversation_action") == "reset":
-        for key in ["triage_conversation", "triage_temperature", "triage_chest_pain", "triage_difficulty_breathing", "triage_severe_bleeding", "triage_unconscious"]:
-            request.session.pop(key, None)
-        request.session.modified = True
-        messages.info(request, "The symptom assessment was restarted.")
-        return redirect("patient_portal_tab", tab="triage")
-
-    conversation = request.session.get("triage_conversation", [])
-    if not isinstance(conversation, list):
-        conversation = []
-
-    is_follow_up = bool(request.POST.get("follow_up_answer", "").strip())
-
-    if is_follow_up:
-        answer = request.POST.get("follow_up_answer", "").strip()
-        if not conversation:
-            messages.error(request, "The assessment session expired. Please start again.")
-            return redirect("patient_portal_tab", tab="triage")
-        conversation.append({"role": "patient", "text": answer})
-        data = {
-            "symptoms": answer,
-            "temperature": request.session.get("triage_temperature"),
-            "chest_pain": request.session.get("triage_chest_pain", False),
-            "difficulty_breathing": request.session.get("triage_difficulty_breathing", False),
-            "severe_bleeding": request.session.get("triage_severe_bleeding", False),
-            "unconscious": request.session.get("triage_unconscious", False),
-        }
-    else:
-        form = SymptomAssessmentForm(request.POST)
-        if not form.is_valid():
-            messages.error(request, "Please correct the symptom questionnaire.")
-            return render(request, "portal/index.html", _portal_context(request, patient, active_tab="triage", triage_form=form), status=400)
+    form = SymptomAssessmentForm(request.POST)
+    if form.is_valid():
         data = form.cleaned_data
         raw_symptoms = data["symptoms"].strip()
         data["symptoms"] = raw_symptoms
-        conversation = [{"role": "patient", "text": raw_symptoms}]
-        request.session["triage_temperature"] = str(data.get("temperature") or "")
-        request.session["triage_chest_pain"] = bool(data.get("chest_pain"))
-        request.session["triage_difficulty_breathing"] = bool(data.get("difficulty_breathing"))
-        request.session["triage_severe_bleeding"] = bool(data.get("severe_bleeding"))
-        request.session["triage_unconscious"] = bool(data.get("unconscious"))
 
-    try:
-        triage_result = _conversational_triage_step(data, conversation)
-    except ValidationError as error:
-        messages.error(request, "; ".join(error.messages) if getattr(error, "messages", None) else str(error))
-        return render(request, "portal/index.html", _portal_context(request, patient, active_tab="triage"), status=503)
+        priority, specialty, confidence, recommendation = _triage_recommendation(data)
 
-    if triage_result["status"] == "needs_follow_up":
-        conversation.append({"role": "assistant", "text": triage_result["follow_up_question"]})
-        request.session["triage_conversation"] = conversation[-12:]
-        request.session.modified = True
-        messages.info(request, "The AI needs one more detail before giving a preliminary assessment.")
-        return redirect("patient_portal_tab", tab="triage")
+        extracted_symptoms = extract_symptoms(raw_symptoms)
+        stored_symptoms = extracted_symptoms or [raw_symptoms]
 
-    stored_symptoms = triage_result["extracted_symptoms"] or [item["text"] for item in conversation if item.get("role") == "patient"]
-    questionnaire = {
-        "conversation": conversation,
-        "temperature": str(data.get("temperature") or ""),
-        "extracted_symptoms": stored_symptoms,
-        "model_version": triage_result["model"],
-        "language": triage_result.get("language", "English"),
-    }
+        questionnaire = {
+            key: str(value)
+            for key, value in data.items()
+        }
+        questionnaire["raw_symptoms"] = raw_symptoms
+        questionnaire["extracted_symptoms"] = stored_symptoms
+        questionnaire["model_version"] = "NLP-NB-2.0 + safety rules"
 
-    with transaction.atomic():
-        case = TriageCase.objects.create(
-            patient=patient,
-            symptoms=stored_symptoms,
-            questionnaire=questionnaire,
-            predicted_specialty=triage_result["specialty"],
-            confidence=triage_result["confidence"],
-            priority=triage_result["priority"],
-            recommendation=triage_result["recommendation"],
-            created_at=timezone.now(),
+        with transaction.atomic():
+            case = TriageCase.objects.create(
+                patient=patient,
+                symptoms=stored_symptoms,
+                questionnaire=questionnaire,
+                predicted_specialty=specialty,
+                confidence=confidence,
+                priority=priority,
+                recommendation=recommendation,
+                created_at=timezone.now(),
+            )
+            Notification.objects.create(
+                patient=patient,
+                channel="System",
+                title="Symptom assessment completed",
+                message=f"Preliminary triage: {priority} priority. {recommendation}",
+                status="Sent",
+                sent_at=timezone.now(),
+            )
+
+        _audit(request, "CREATE", "TriageCase", case.pk, "Patient submitted symptom assessment")
+        messages.success(request, f"{priority} priority: {recommendation} This is not a medical diagnosis.")
+    else:
+        messages.error(request, "Please correct the symptom questionnaire.")
+        return render(
+            request,
+            "portal/index.html",
+            _portal_context(request, patient, active_tab="triage", triage_form=form),
+            status=400,
         )
-        Notification.objects.create(
-            patient=patient,
-            channel="System",
-            title="Symptom assessment completed",
-            message=f"Preliminary triage: {triage_result['priority']} priority. {triage_result['recommendation']}",
-            status="Sent",
-            sent_at=timezone.now(),
-        )
-
-    for key in ["triage_conversation", "triage_temperature", "triage_chest_pain", "triage_difficulty_breathing", "triage_severe_bleeding", "triage_unconscious"]:
-        request.session.pop(key, None)
-    request.session.modified = True
-
-    _audit(request, "CREATE", "TriageCase", case.pk, "Patient completed conversational symptom assessment")
-    messages.success(request, f"{triage_result['priority']} priority: {triage_result['recommendation']} This is not a medical diagnosis.")
     return redirect(f"{reverse('patient_portal_tab', args=['triage'])}?result={case.pk}")
 
 

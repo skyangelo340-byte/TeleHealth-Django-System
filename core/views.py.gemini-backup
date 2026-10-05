@@ -1,5 +1,4 @@
-﻿import json
-import os
+import json
 from decimal import Decimal
 
 from django.contrib.auth import authenticate, login, logout
@@ -13,7 +12,6 @@ from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 from .ml_triage import ai_triage_recommendation, extract_emergency_flags, extract_symptoms
-from .gemini_triage import gemini_triage_recommendation, gemini_conversational_triage, GeminiTriageError
 
 from .models import (
     Patient, StaffProfile, Appointment, TriageCase, ConsultationRecord,
@@ -450,27 +448,16 @@ def api_appointment_detail(request, appointment_id):
     return JsonResponse({"ok": True, "appointment": result})
 
 
-def _triage_recommendation(data, include_details=False):
+def _triage_recommendation(data):
     """
-    Gemini-assisted preliminary triage with deterministic safety rules.
+    NLP-enhanced AI-assisted clinical triage.
 
-    Gemini handles natural-language symptom extraction and specialty
-    classification. Emergency/high-risk conditions are handled locally
-    before Gemini is called. This is not a medical diagnosis.
+    Natural-language symptom descriptions are normalized before the
+    Naive Bayes model is used. Emergency/high-risk conditions remain
+    protected by deterministic safety rules.
+
+    This is a preliminary recommendation, not a medical diagnosis.
     """
-
-    def _finish(priority, specialty, confidence, recommendation, extracted_symptoms=None, model=None):
-        details = {
-            "priority": priority,
-            "specialty": specialty,
-            "confidence": confidence,
-            "recommendation": recommendation,
-            "extracted_symptoms": extracted_symptoms or [],
-            "model": model or "Safety Rules",
-        }
-        if include_details:
-            return details
-        return priority, specialty, confidence, recommendation
 
     symptoms = data.get("symptoms", [])
     if isinstance(symptoms, str):
@@ -509,33 +496,26 @@ def _triage_recommendation(data, include_details=False):
 
     # Safety rules always take priority over the ML model.
     if unconscious or severe_bleeding or (chest_pain and breathing):
-        return _finish(
+        return (
             "High",
             "Emergency",
             Decimal("99.00"),
             "Seek immediate emergency assessment at the Barangay Health Center or nearest emergency facility.",
-            extracted_symptoms=extract_symptoms(raw_text),
-            model="Safety Rules",
         )
 
     if chest_pain or breathing or fever >= 39.0:
-        return _finish(
+        return (
             "High",
             "General Medicine",
             Decimal("99.00"),
             "Urgent same-day clinical assessment is recommended.",
-            extracted_symptoms=extract_symptoms(raw_text),
-            model="Safety Rules",
         )
 
-    # Gemini handles natural-language symptom understanding and specialty classification.
-    try:
-        ai_result = gemini_triage_recommendation({
-            **data,
-            "symptoms": raw_text,
-        })
-    except GeminiTriageError as exc:
-        raise ValidationError(str(exc)) from exc
+    # AI/ML specialty prediction. The model now accepts natural language.
+    ai_result = ai_triage_recommendation({
+        **data,
+        "symptoms": raw_text,
+    })
 
     specialty = ai_result["specialty"]
     confidence = ai_result["confidence"]
@@ -565,185 +545,12 @@ def _triage_recommendation(data, include_details=False):
             "A routine consultation is appropriate unless symptoms worsen."
         )
 
-    return _finish(
+    return (
         priority,
         specialty,
         confidence,
         recommendation,
-        extracted_symptoms=ai_result.get("extracted_symptoms", []),
-        model=ai_result.get("model"),
     )
-
-
-def _conversational_triage_step(data, conversation):
-    """Run one adaptive triage turn with local emergency guardrails."""
-    current_text = str(data.get("symptoms", "")).strip()
-    combined_patient_text = " ".join(
-        str(item.get("text", "")).strip()
-        for item in conversation
-        if isinstance(item, dict) and item.get("role") == "patient"
-    ).strip()
-    safety_text = f"{combined_patient_text} {current_text}".strip()
-    flags = extract_emergency_flags(safety_text)
-
-    chest_pain = bool(data.get("chest_pain")) or flags["chest pain"]
-    breathing = bool(data.get("difficulty_breathing")) or flags["difficulty breathing"]
-    severe_bleeding = bool(data.get("severe_bleeding")) or flags["severe bleeding"]
-    unconscious = bool(data.get("unconscious")) or flags["unconscious"]
-
-    try:
-        fever = float(data.get("temperature") or 0)
-    except (TypeError, ValueError):
-        fever = 0
-
-    extracted_local = extract_symptoms(safety_text)
-
-    if unconscious or severe_bleeding or (chest_pain and breathing):
-        return {
-            "status": "complete",
-            "priority": "High",
-            "specialty": "Emergency",
-            "confidence": Decimal("99.00"),
-            "recommendation": "Seek immediate emergency assessment at the Barangay Health Center or nearest emergency facility.",
-            "extracted_symptoms": extracted_local,
-            "model": "Safety Rules",
-            "language": "English",
-            "follow_up_question": "",
-        }
-
-    if chest_pain or breathing or fever >= 39.0:
-        return {
-            "status": "complete",
-            "priority": "High",
-            "specialty": "General Medicine",
-            "confidence": Decimal("99.00"),
-            "recommendation": "Urgent same-day clinical assessment is recommended.",
-            "extracted_symptoms": extracted_local,
-            "model": "Safety Rules",
-            "language": "English",
-            "follow_up_question": "",
-        }
-
-    try:
-        ai_result = gemini_conversational_triage({
-            "conversation": conversation,
-            "temperature": data.get("temperature"),
-        })
-    except GeminiTriageError as exc:
-        raise ValidationError(str(exc)) from exc
-
-    if ai_result["status"] == "needs_follow_up":
-        patient_turns = sum(1 for item in conversation if isinstance(item, dict) and item.get("role") == "patient")
-        if patient_turns < 5:
-            return {
-                **ai_result,
-                "priority": "",
-            }
-        ai_result = {
-            **ai_result,
-            "status": "complete",
-            "follow_up_question": "",
-            "recommendation": "A healthcare professional should review the information provided before making a clinical decision.",
-        }
-
-    normalized_text = " ".join(ai_result.get("extracted_symptoms", []))
-    priority_text = f"{safety_text.lower()} {normalized_text.lower()}".strip()
-
-    if fever >= 38.0 or any(
-        phrase in priority_text
-        for phrase in ["persistent vomiting", "severe headache", "dizziness"]
-    ):
-        priority = "Medium"
-    else:
-        priority = "Low"
-
-    return {
-        **ai_result,
-        "priority": priority,
-    }
-
-
-@require_http_methods(["POST"])
-def api_triage_conversation(request):
-    """API endpoint for multi-turn patient symptom assessment."""
-    if not _require_auth(request):
-        return _error("Authentication required for symptom assessment.", status=401)
-
-    data = _json_body(request)
-    if not isinstance(data, dict):
-        return _error("Request body must be a JSON object.")
-
-    patient = _patient_for_request(request)
-    if not patient:
-        return _error("A patient profile is required for symptom assessment.", status=403)
-
-    if data.get("reset"):
-        request.session.pop("triage_conversation", None)
-        request.session.modified = True
-
-        if not str(data.get("message", "")).strip():
-            return JsonResponse({
-                "ok": True,
-                "status": "reset"
-            })
-
-    message = str(data.get("message", "")).strip()
-    if not message:
-        return _error("A symptom message is required.")
-
-    conversation = request.session.get("triage_conversation", [])
-    if not isinstance(conversation, list):
-        conversation = []
-
-    conversation.append({"role": "patient", "text": message})
-    try:
-        result = _conversational_triage_step(data, conversation)
-    except ValidationError as exc:
-        return _error(str(exc), status=503)
-
-    if result["status"] == "needs_follow_up":
-        conversation.append({"role": "assistant", "text": result["follow_up_question"]})
-        request.session["triage_conversation"] = conversation[-12:]
-        request.session.modified = True
-        return JsonResponse({"ok": True, "status": "needs_follow_up", "question": result["follow_up_question"], "language": result["language"], "extracted_symptoms": result["extracted_symptoms"], "model": result["model"]})
-
-    stored_symptoms = result["extracted_symptoms"] or [message]
-    questionnaire = {
-        "conversation": conversation,
-        "temperature": str(data.get("temperature", "")),
-        "extracted_symptoms": stored_symptoms,
-        "model_version": result["model"],
-        "language": result.get("language", "English"),
-          "temporary_self_care": result.get("temporary_self_care", ""),
-          "if_care_delayed": result.get("if_care_delayed", ""),
-          "urgent_warning_signs": result.get("urgent_warning_signs", []),
-    }
-    with transaction.atomic():
-        triage = TriageCase.objects.create(
-            patient=patient,
-            symptoms=stored_symptoms,
-            questionnaire=questionnaire,
-            predicted_specialty=result["specialty"],
-            confidence=result["confidence"],
-            priority=result["priority"],
-            recommendation=result["recommendation"],
-            created_at=timezone.now(),
-        )
-        Notification.objects.create(
-            patient=patient,
-            channel="System",
-            title="Symptom assessment completed",
-            message=f"Preliminary triage: {result['priority']} priority. {result['recommendation']}",
-            status="Sent",
-            sent_at=timezone.now(),
-        )
-    request.session.pop("triage_conversation", None)
-    request.session.modified = True
-    _audit(request, "CREATE", "TriageCase", triage.id, "Patient completed conversational symptom assessment")
-    return JsonResponse({"ok": True, "status": "complete", "triage": triage_to_dict(triage), "language": result.get("language", "English"),
-          "temporary_self_care": result.get("temporary_self_care", ""),
-          "if_care_delayed": result.get("if_care_delayed", ""),
-          "urgent_warning_signs": result.get("urgent_warning_signs", []), "disclaimer": "This is a preliminary AI-assisted assessment and is not a medical diagnosis."}, status=201)
 
 @require_http_methods(["GET", "POST"])
 def api_triage(request):
@@ -793,16 +600,9 @@ def api_triage(request):
         return _form_error(form)
     assessment = form.cleaned_data
     assessment["symptoms"] = raw_symptoms
-    try:
-        triage_result = _triage_recommendation(assessment, include_details=True)
-    except ValidationError as exc:
-        message = "; ".join(exc.messages) if getattr(exc, "messages", None) else str(exc)
-        return _error(message, status=503)
-    priority = triage_result["priority"]
-    specialty = triage_result["specialty"]
-    confidence = triage_result["confidence"]
-    recommendation = triage_result["recommendation"]
-    stored_symptoms = triage_result["extracted_symptoms"] or [raw_symptoms]
+    priority, specialty, confidence, recommendation = _triage_recommendation(assessment)
+    extracted_symptoms = extract_symptoms(raw_symptoms)
+    stored_symptoms = extracted_symptoms or [raw_symptoms]
     questionnaire = {
         key: str(value)
         for key, value in assessment.items()
@@ -1028,6 +828,3 @@ def api_dashboard(request):
         "upcoming_appointments": [appointment_to_dict(a) for a in upcoming],
         "recent_triage": [triage_to_dict(t) for t in recent_triage],
     })
-
-
-

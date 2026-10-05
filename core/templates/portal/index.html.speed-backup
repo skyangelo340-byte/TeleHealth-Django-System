@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Patient Portal | TeleHealth RHU{% endblock %}
+{% block content %}
+<section class="care-hero patient-hero">
+  <div><span class="eyebrow">MY HEALTH DASHBOARD</span><h1>Care that stays connected to you.</h1><p>Welcome, {{ patient.name }}. Request an appointment, receive specialist availability updates, and keep track of your care in one secure place.</p></div>
+  <a class="button button-accent" href="{% url 'patient_portal_tab' 'schedule' %}">Request an appointment</a>
+</section>
+<nav class="tabs" data-tabs aria-label="Patient portal sections">
+  <a data-tab="overview" {% if active_tab == 'overview' %}class="active" aria-current="page"{% endif %} href="{% url 'patient_portal_tab' 'overview' %}">Overview</a>
+  <a data-tab="profile" {% if active_tab == 'profile' %}class="active" aria-current="page"{% endif %} href="{% url 'patient_portal_tab' 'profile' %}">Profile</a>
+  <a data-tab="schedule" {% if active_tab == 'schedule' %}class="active" aria-current="page"{% endif %} href="{% url 'patient_portal_tab' 'schedule' %}">Schedule</a>
+  <a data-tab="triage" {% if active_tab == 'triage' %}class="active" aria-current="page"{% endif %} href="{% url 'patient_portal_tab' 'triage' %}">Symptom assessment</a>
+  <a data-tab="appointments" {% if active_tab == 'appointments' %}class="active" aria-current="page"{% endif %} href="{% url 'patient_portal_tab' 'appointments' %}">Appointments</a>
+  <a data-tab="history" {% if active_tab == 'history' %}class="active" aria-current="page"{% endif %} href="{% url 'patient_portal_tab' 'history' %}">History & follow-up</a>
+  <a data-tab="notifications" {% if active_tab == 'notifications' %}class="active" aria-current="page"{% endif %} href="{% url 'patient_portal_tab' 'notifications' %}">Notifications</a>
+</nav>
+<div data-tab-panels data-active-tab="{{ active_tab }}">
+  <section data-panel="overview" {% if active_tab != 'overview' %}hidden{% endif %}>
+    <div class="section-heading"><span class="module-tag">OVERVIEW</span><h2>Your care at a glance</h2><p>Appointments, triage, records, and follow-ups in one place.</p></div>
+    <div class="metric-grid patient-metrics"><article class="metric"><small>Appointments</small><strong>{{ all_appointment_count }}</strong></article><article class="metric"><small>Assessments</small><strong>{{ patient.triage_cases.count }}</strong></article><article class="metric"><small>Consultation records</small><strong>{{ consultations.count }}</strong></article><article class="metric"><small>Pending follow-ups</small><strong>{{ pending_reminder_count }}</strong></article></div>
+    <div class="two-column">
+      <section class="card"><div class="card-head"><h2>Next appointment</h2><a href="{% url 'patient_portal_tab' 'appointments' %}">View all</a></div>{% with item=next_appointment %}{% if item %}<p><b>{{ item.department }}</b></p><p>{{ item.appointment_date }} at {{ item.appointment_time|time:'H:i' }}</p><span class="badge">{{ item.status }}</span>{% else %}<p class="empty">No upcoming appointments.</p><a class="button button-primary" href="{% url 'patient_portal_tab' 'schedule' %}">Request appointment</a>{% endif %}{% endwith %}</section>
+      <section class="card"><div class="card-head"><h2>Latest triage recommendation</h2><a href="{% url 'patient_portal_tab' 'triage' %}">Assess symptoms</a></div>{% with case=patient.triage_cases.first %}{% if case %}<p><b>{{ case.priority }} priority - {{ case.predicted_specialty }}</b></p><p>{{ case.recommendation }}</p>{% if case.priority == 'High' %}<div class="alert alert-warning" role="alert">Urgent symptoms need prompt in-person assessment. If symptoms are severe, go to the nearest emergency facility now.</div>{% endif %}{% else %}<p class="empty">No symptom assessments yet.</p>{% endif %}{% endwith %}</section>
+    </div>
+  </section>
+
+  <section data-panel="profile" {% if active_tab != 'profile' %}hidden{% endif %}>
+    <div class="section-heading"><span class="module-tag">PROFILE</span><h2>Personal and safety information</h2><p>Accurate contact, allergy, and emergency details help the health center support you safely.</p></div>
+    <div class="card form-card"><form method="post" action="{% url 'update_profile' %}">{% csrf_token %}{% include "includes/form_errors.html" %}<div class="form-grid">{% for field in profile_form %}{% include "includes/field.html" %}{% endfor %}</div><button class="button button-primary" data-submit-label="Saving...">Save profile changes</button></form></div>
+  </section>
+
+  <section data-panel="schedule" {% if active_tab != 'schedule' %}hidden{% endif %}>
+    <div class="section-heading"><span class="module-tag">APPOINTMENT REQUEST</span><h2>Request a consultation</h2><p>Choose online or in-person care. Requests are reviewed by health center staff before confirmation.</p></div>
+    <div class="two-column queue-layout"><div class="card form-card"><form method="post" action="{% url 'schedule_appointment' %}">{% csrf_token %}{% include "includes/form_errors.html" %}<div class="form-grid">{% for field in appointment_form %}{% include "includes/field.html" %}{% endfor %}</div><button class="button button-primary" data-submit-label="Submitting...">Submit appointment request</button></form></div><aside class="card info-panel"><h2>What happens next?</h2><ol class="steps"><li>Staff reviews your request.</li><li>You receive an update when it is approved or scheduled.</li><li>Check the Appointments tab for the latest status.</li></ol><p class="muted">For urgent or severe symptoms, do not wait for an online appointment.</p></aside></div>
+  </section>
+
+  <section data-panel="triage" {% if active_tab != 'triage' %}hidden{% endif %}>
+    <div class="section-heading"><span class="module-tag">CONVERSATIONAL SYMPTOM CHECK</span><h2>Tell us what you are experiencing</h2><p>The AI can ask follow-up questions when your first answer does not contain enough information. This is a preliminary assessment, not a medical diagnosis.</p></div>
+    <div class="two-column triage-layout">
+      <div class="card form-card triage-form-card">
+        {% if triage_conversation %}
+          <div class="triage-form-intro"><span class="triage-step">FOLLOW-UP</span><h3>Let's get a little more information</h3><p>Answer the latest question in your own words. You can use English, Filipino, or another language supported by the AI.</p></div>
+          <div class="triage-chat" aria-live="polite">
+            {% for message in triage_conversation %}
+              <div class="triage-message {% if message.role == 'assistant' %}triage-message-ai{% else %}triage-message-patient{% endif %}">
+                <small>{% if message.role == 'assistant' %}AI Assistant{% else %}You{% endif %}</small>
+                <p>{{ message.text }}</p>
+              </div>
+            {% endfor %}
+          </div>
+          <form method="post" action="{% url 'submit_assessment' %}" class="triage-followup-form">
+            {% csrf_token %}
+            <label for="follow_up_answer">Your answer</label>
+            <textarea class="form-control" id="follow_up_answer" name="follow_up_answer" rows="4" required placeholder="Type your answer here..."></textarea>
+            <button class="button button-primary triage-submit" data-submit-label="Analyzing...">Continue assessment</button>
+          </form>
+          <form method="post" action="{% url 'submit_assessment' %}" class="triage-reset-form">
+            {% csrf_token %}
+            <input type="hidden" name="conversation_action" value="reset">
+            <button class="button button-secondary" type="submit">Start new assessment</button>
+          </form>
+        {% else %}
+          <div class="triage-form-intro"><span class="triage-step">STEP 1</span><h3>Describe your concern</h3><p>Give as much detail as you can. If something important is missing, the AI will ask one follow-up question at a time.</p></div>
+          <form method="post" action="{% url 'submit_assessment' %}">
+            {% csrf_token %}
+            {% include "includes/form_errors.html" %}
+            {% for field in triage_form %}{% include "includes/field.html" %}{% endfor %}
+            <button class="button button-primary triage-submit" data-submit-label="Analyzing...">Start assessment</button>
+          </form>
+        {% endif %}
+      </div>
+      <aside class="card assessment-result-panel" aria-live="polite">
+        {% if assessment_result %}
+          <div class="assessment-result-head">
+            <div><span class="module-tag">AI-ASSISTED RESULT</span><h3>Preliminary Assessment</h3></div>
+            <span class="triage-priority priority-{{ assessment_result.priority|lower }}">{{ assessment_result.priority }} priority</span>
+          </div>
+          <div class="assessment-specialty"><small>Recommended specialty</small><strong>{{ assessment_result.predicted_specialty }}</strong></div>
+          <div class="assessment-grid">
+            <div><small>Confidence</small><strong>{{ assessment_result.confidence }}%</strong></div>
+            <div><small>AI model</small><strong>{{ assessment_result.questionnaire.model_version|default:'Gemini' }}</strong></div>
+          </div>
+          <div class="assessment-section"><small>Recognized symptoms</small><div class="symptom-chips">{% for symptom in assessment_result.symptoms %}<span>{{ symptom }}</span>{% empty %}<span>Based on the patient's conversation</span>{% endfor %}</div></div>
+          <div class="assessment-recommendation"><small>Recommendation</small><p>{{ assessment_result.recommendation }}</p></div>
+          <div class="assessment-disclaimer">This is a preliminary AI-assisted assessment, not a medical diagnosis. A healthcare professional should review the result.</div>
+        {% else %}
+          <div class="assessment-empty">
+            <div class="assessment-icon">AI</div>
+            <span class="module-tag">ASSESSMENT RESULT</span>
+            {% if triage_conversation %}
+              <h3>Assessment in progress</h3>
+              <p>The system is collecting the details it needs. Your final recommendation will appear here after the conversation is complete.</p>
+            {% else %}
+              <h3>Your result will appear here</h3>
+              <p>Start with your main concern. The AI will ask follow-up questions when important details are missing.</p>
+            {% endif %}
+            <div class="assessment-preview"><span>Your symptoms</span><span>↓</span><span>Follow-up questions when needed</span><span>↓</span><span>Preliminary recommendation</span></div>
+          </div>
+        {% endif %}
+      </aside>
+    </div>
+  </section>
+  <section data-panel="appointments" {% if active_tab != 'appointments' %}hidden{% endif %}>
+    <div class="section-heading"><span class="module-tag">APPOINTMENTS</span><h2>Requests and scheduled care</h2><p>Track pending, approved, scheduled, completed, cancelled, and no-show appointments.</p></div>
+    <form class="filter-bar" method="get" action="{% url 'patient_portal_tab' 'appointments' %}"><label class="sr-only" for="portal-search">Search appointments</label><input class="form-control" id="portal-search" name="q" value="{{ search }}" placeholder="Search department, provider, or reason"><label class="sr-only" for="portal-status">Appointment status</label><select class="form-control" id="portal-status" name="status"><option value="">All statuses</option><option {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option><option {% if status_filter == 'Approved' %}selected{% endif %}>Approved</option><option {% if status_filter == 'Scheduled' %}selected{% endif %}>Scheduled</option><option {% if status_filter == 'Rescheduled' %}selected{% endif %}>Rescheduled</option><option {% if status_filter == 'Completed' %}selected{% endif %}>Completed</option><option {% if status_filter == 'Cancelled' %}selected{% endif %}>Cancelled</option><option {% if status_filter == 'No-show' %}selected{% endif %}>No-show</option></select><button class="button button-secondary">Filter</button>{% if search or status_filter %}<a class="button button-secondary" href="{% url 'patient_portal_tab' 'appointments' %}">Clear</a>{% endif %}</form>
+    <section class="card table-card"><table><caption class="sr-only">Your appointments</caption><thead><tr><th scope="col">Date</th><th scope="col">Service</th><th scope="col">Type</th><th scope="col">Provider</th><th scope="col">Status</th><th scope="col">Action</th></tr></thead><tbody>{% for item in appointments %}<tr><td><b>{{ item.appointment_date }}</b><small>{{ item.appointment_time|time:'H:i' }}</small></td><td>{{ item.department }}<small>{{ item.reason|default:'No reason recorded' }}</small></td><td>{{ item.consultation_type }}</td><td>{{ item.provider_name }}</td><td><span class="badge">{{ item.status }}</span></td><td>{% if item.status != 'Completed' and item.status != 'Cancelled' and item.status != 'No-show' %}<form method="post" action="{% url 'cancel_appointment' item.pk %}" data-confirm="Cancel this appointment request?">{% csrf_token %}<button class="button button-small button-danger">Cancel</button></form>{% else %}<span class="muted">No action</span>{% endif %}</td></tr>{% empty %}<tr><td colspan="6" class="empty">No matching appointments. {% if search or status_filter %}<a href="{% url 'patient_portal_tab' 'appointments' %}">Clear filters</a>{% else %}<a href="{% url 'patient_portal_tab' 'schedule' %}">Request your first appointment</a>{% endif %}</td></tr>{% endfor %}</tbody></table></section>
+  </section>
+
+  <section data-panel="history" {% if active_tab != 'history' %}hidden{% endif %}>
+    <div class="section-heading"><span class="module-tag">CARE HISTORY</span><h2>Consultations and follow-ups</h2><p>Review previous care instructions and upcoming follow-up services.</p></div>
+    <div class="two-column"><div class="stack">{% for record in consultations %}<article class="card"><div class="card-head"><h2>{{ record.appointment.department }}</h2><span class="mono">{{ record.appointment.appointment_date }}</span></div><p>Provider: {{ record.appointment.provider_name }}</p><dl><dt>Diagnosis</dt><dd>{{ record.diagnosis|default:'Not recorded' }}</dd><dt>Treatment</dt><dd>{{ record.treatment|default:'Not recorded' }}</dd><dt>Prescription</dt><dd>{{ record.prescription|default:'None recorded' }}</dd></dl></article>{% empty %}<div class="card empty">No consultation history yet.</div>{% endfor %}</div><div class="stack"><h2>Follow-up reminders</h2>{% for reminder in reminders %}<article class="card"><div class="card-head"><b>{{ reminder.reminder_date }}</b><span class="badge">{{ reminder.status }}</span></div><p>{{ reminder.message }}</p></article>{% empty %}<p class="empty">No follow-up reminders.</p>{% endfor %}</div></div>
+  </section>
+
+  <section data-panel="notifications" {% if active_tab != 'notifications' %}hidden{% endif %}>
+    <div class="section-heading"><span class="module-tag">NOTIFICATIONS</span><h2>Care updates and reminders</h2><p>Important appointment, follow-up, and health center messages.</p></div>
+    <div class="stack">{% for item in notifications %}<article class="card notice {% if not item.is_read %}notice-unread{% endif %}"><div><div class="card-head"><h2>{{ item.title }}</h2><span class="badge">{{ item.channel }}</span></div><p>{{ item.message }}</p><small>{{ item.created_at|date:'M j, Y H:i' }} - {{ item.status }}</small></div>{% if not item.is_read %}<form method="post" action="{% url 'read_notification' item.pk %}">{% csrf_token %}<button class="button button-small">Mark read</button></form>{% endif %}</article>{% empty %}<p class="empty">No notifications yet.</p>{% endfor %}</div>
+  </section>
+</div>
+{% endblock %}

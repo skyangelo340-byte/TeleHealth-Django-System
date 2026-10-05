@@ -10,7 +10,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import Appointment, ConsultationRecord, FollowUpReminder, Notification, Patient, StaffNotification, StaffProfile, TriageCase
+from .models import Appointment, ConsultationRecord, FollowUpReminder, Notification, Patient, StaffNotification, StaffProfile
 from .ml_triage import ai_triage_recommendation, extract_emergency_flags, extract_symptoms
 
 
@@ -125,52 +125,6 @@ class TeleHealthAPITests(TestCase):
         self.assertEqual(response.status_code, 201)
         triage = response.json()["triage"]
         self.assertEqual(triage["predicted_specialty"], "Dermatology")
-
-    @patch("core.views.gemini_conversational_triage")
-    def test_conversational_triage_asks_for_missing_information(self, mock_gemini):
-        mock_gemini.return_value = {
-            "status": "needs_follow_up",
-            "language": "English",
-            "follow_up_question": "Which part of your body is affected?",
-            "specialty": "General Medicine",
-            "confidence": Decimal("55.00"),
-            "extracted_symptoms": ["possible bone injury concern"],
-            "recommendation": "",
-            "model": "gemini-3.6-flash",
-        }
-        self.client.login(username="patient@test.local", password="StrongPass123!")
-        response = self.client.post(
-            "/api/triage/conversation/",
-            data=json.dumps({"message": "broken bones"}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["status"], "needs_follow_up")
-        self.assertIn("Which part", response.json()["question"])
-        self.assertEqual(TriageCase.objects.count(), 0)
-
-    @patch("core.views.gemini_conversational_triage")
-    def test_conversational_triage_creates_case_after_completion(self, mock_gemini):
-        mock_gemini.return_value = {
-            "status": "complete",
-            "language": "English",
-            "follow_up_question": "",
-            "specialty": "General Medicine",
-            "confidence": Decimal("91.00"),
-            "extracted_symptoms": ["right arm pain", "pain 8/10"],
-            "recommendation": "A healthcare professional should assess the concern promptly.",
-            "model": "gemini-3.6-flash",
-        }
-        self.client.login(username="patient@test.local", password="StrongPass123!")
-        response = self.client.post(
-            "/api/triage/conversation/",
-            data=json.dumps({"message": "My right arm hurts a lot."}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json()["status"], "complete")
-        self.assertEqual(response.json()["triage"]["predicted_specialty"], "General Medicine")
-        self.assertEqual(TriageCase.objects.count(), 1)
 
     def test_anonymous_users_cannot_read_health_data_collections(self):
         for path in ["/api/patients/", "/api/appointments/", "/api/triage/", "/api/users/", "/api/dashboard/"]:
