@@ -27,3 +27,9 @@ Thumbs.db
 MOCK_DATA.csv
 core/management/commands/import_patients.py
 kill_test_db_session.py
+# Local development backups
+*.backup
+*.care-backup
+*.speed-backup
+*.gemini-backup
+*.route-backup
